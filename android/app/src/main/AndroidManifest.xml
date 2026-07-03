@@ -46,6 +46,10 @@
             android:name=".ui.recommendation.RecommendationActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.rag.RagActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

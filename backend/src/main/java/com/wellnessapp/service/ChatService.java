@@ -1,21 +1,38 @@
 package com.wellnessapp.service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+
 import com.wellnessapp.dto.ChatDTOs.*;
+import com.wellnessapp.dto.ChatDTOs.ChatHistoryResponse;
+import com.wellnessapp.dto.ChatDTOs.ChatRequest;
+import com.wellnessapp.dto.ChatDTOs.ChatResponse;
 import com.wellnessapp.entity.ChatMessage;
 import com.wellnessapp.entity.User;
 import com.wellnessapp.repository.ChatMessageRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
- * Chatbot service — processes user messages and generates wellness-focused
- * responses. Uses a keyword-based fallback when the external AI is unavailable.
+ * Chatbot service with <strong>3-tier fallback</strong>:
+ *
+ * <ol>
+ *   <li><b>Python Agent RAG</b> — calls {@code POST /chat} on the Python
+ *       agent, which has DeepSeek + RAG tool calling over the MSD medical
+ *       knowledge base.</li>
+ *   <li><b>Direct DeepSeek</b> — if the Python agent is unreachable, calls
+ *       the DeepSeek Chat API directly via {@link AIClientService}.</li>
+ *   <li><b>Static fallback</b> — if both are unavailable, returns a simple
+ *       offline message.</li>
+ * </ol>
  *
  * @author WellnessApp Team
  */
@@ -26,29 +43,55 @@ public class ChatService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final AIClientService aiClientService;
+    private final RestClient restClient;
+    private final String agentBaseUrl;
 
-    public ChatService(ChatMessageRepository chatMessageRepository,
-                       AIClientService aiClientService) {
+    /** Maximum conversation history depth sent to the AI. */
+    private static final int MAX_HISTORY_TURNS = 10;
+
+    public ChatService(
+            ChatMessageRepository chatMessageRepository,
+            AIClientService aiClientService,
+            @Value("${agent.python.base-url:http://localhost:5001}") String agentBaseUrl) {
         this.chatMessageRepository = chatMessageRepository;
         this.aiClientService = aiClientService;
+        this.agentBaseUrl = agentBaseUrl;
+        this.restClient = RestClient.builder()
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
     }
 
+    // ── Public API ─────────────────────────────────────────────────
+
     /**
-     * Process a chat message from the user and return a response.
+     * Process a user message through the 3-tier fallback pipeline.
      */
     public ChatResponse processMessage(User user, ChatRequest request) {
         String userMessage = request.getMessage().trim();
-        String reply;
+        log.debug("Chat message from user {}: \"{}\"", user.getId(), truncate(userMessage, 80));
 
-        // Try AI service first, fall back to keyword-based responses
-        try {
-            reply = aiClientService.getChatResponse(userMessage);
-        } catch (Exception e) {
-            log.warn("AI service unavailable, using fallback. Error: {}", e.getMessage());
-            reply = generateFallbackResponse(userMessage);
+        // 1. Build conversation history from DB
+        List<Map<String, String>> history = buildHistory(user);
+
+        // 2. Try 3 tiers
+        String reply = tryPythonAgent(userMessage, history);
+        if (reply != null) {
+            log.info("User {} → Tier-1 (Python RAG) responded", user.getId());
         }
 
-        // Save conversation to database
+        if (reply == null) {
+            reply = tryDirectDeepSeek(userMessage, history);
+            if (reply != null) {
+                log.info("User {} → Tier-2 (Direct DeepSeek) responded", user.getId());
+            }
+        }
+
+        if (reply == null) {
+            reply = buildFallbackReply();
+            log.warn("User {} → Tier-3 (static fallback) used", user.getId());
+        }
+
+        // 3. Persist
         ChatMessage chatMessage = ChatMessage.builder()
                 .user(user)
                 .userMessage(userMessage)
@@ -72,79 +115,92 @@ public class ChatService {
                         .id(msg.getId())
                         .userMessage(msg.getUserMessage())
                         .botResponse(msg.getBotResponse())
-                        .createdAt(msg.getCreatedAt() != null ?
-                                msg.getCreatedAt().toString() : null)
+                        .createdAt(msg.getCreatedAt() != null
+                                ? msg.getCreatedAt().toString() : null)
                         .build())
                 .toList();
     }
 
-    /**
-     * Keyword-based fallback response generator when AI is unavailable.
-     * Covers basic wellness topics defined in the prompt templates.
-     */
-    private String generateFallbackResponse(String message) {
-        String lower = message.toLowerCase();
+    // ── 3-Tier fallback ────────────────────────────────────────────
 
-        // Sleep-related
-        if (containsAny(lower, "sleep", "insomnia", "tired", "rest")) {
-            return "Adults should aim for 7-9 hours of sleep per night. "
-                    + "Try maintaining a consistent sleep schedule, avoiding screens "
-                    + "before bedtime, and keeping your bedroom cool and dark. "
-                    + "Would you like to log your sleep in the Health Records section?";
+    /** Tier 1: Python Agent with RAG tool calling. */
+    private String tryPythonAgent(String userMessage, List<Map<String, String>> history) {
+        try {
+            Map<String, Object> body = Map.of(
+                    "message", userMessage,
+                    "history", history
+            );
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restClient.post()
+                    .uri(agentBaseUrl + "/chat")
+                    .body(body)
+                    .retrieve()
+                    .body(Map.class);
+
+            if (response != null && Boolean.TRUE.equals(response.get("success"))) {
+                return (String) response.get("answer");
+            }
+            log.warn("Python agent returned unsuccessful response: {}", response);
+            return null;
+        } catch (Exception e) {
+            log.warn("Python agent unavailable: {}", e.getMessage());
+            return null;
         }
-
-        // Exercise-related
-        if (containsAny(lower, "exercise", "workout", "running", "gym", "fitness",
-                "activity", "cardio", "strength")) {
-            return "The WHO recommends at least 150 minutes of moderate aerobic "
-                    + "activity or 75 minutes of vigorous activity per week. "
-                    + "Mix in strength training twice a week for best results. "
-                    + "Remember to track your activities in the app!";
-        }
-
-        // Nutrition-related
-        if (containsAny(lower, "diet", "food", "eat", "nutrition", "calorie",
-                "protein", "vitamin", "meal", "healthy eating")) {
-            return "A balanced diet should include plenty of fruits, vegetables, "
-                    + "whole grains, lean proteins, and healthy fats. "
-                    + "Stay hydrated by drinking at least 8 glasses of water daily. "
-                    + "Consider consulting a registered dietitian for personalized advice.";
-        }
-
-        // Stress/mental health
-        if (containsAny(lower, "stress", "anxiety", "mental", "meditation",
-                "mindfulness", "relax", "calm")) {
-            return "Managing stress is important for overall wellness. "
-                    + "Try deep breathing exercises, meditation (even 5-10 minutes helps), "
-                    + "regular physical activity, and maintaining social connections. "
-                    + "If stress feels overwhelming, please reach out to a mental health professional.";
-        }
-
-        // Hydration
-        if (containsAny(lower, "water", "hydration", "drink", "thirst", "fluid")) {
-            return "Proper hydration is essential! Aim for about 2-3 liters (8-12 cups) "
-                    + "of water per day, adjusting for activity level and climate. "
-                    + "A good indicator: your urine should be light yellow in color.";
-        }
-
-        // General wellness / greeting
-        if (containsAny(lower, "hello", "hi", "hey", "help", "wellness", "health",
-                "wellbeing")) {
-            return "Hello! I'm WellBot, your wellness assistant. I can help with "
-                    + "topics like sleep, exercise, nutrition, stress management, "
-                    + "and hydration. What would you like to know about?";
-        }
-
-        // Off-topic redirect
-        return "I'm specialized in health and wellness topics. "
-                + "Could you ask me something related to your wellbeing, "
-                + "such as sleep, exercise, nutrition, or stress management?";
     }
 
-    private boolean containsAny(String text, String... keywords) {
-        for (String keyword : keywords) {
-            if (text.contains(keyword)) return true;
+    /** Tier 2: Direct DeepSeek call (no RAG). */
+    private String tryDirectDeepSeek(String userMessage, List<Map<String, String>> history) {
+        try {
+            // Build message list: system prompt + history + new user message
+            List<Map<String, String>> messages = new ArrayList<>();
+            messages.add(Map.of("role", "system", "content", AIClientService.SYSTEM_PROMPT));
+            messages.addAll(history);
+            messages.add(Map.of("role", "user", "content", userMessage));
+
+            return aiClientService.chat(messages);
+        } catch (AIClientService.AiServiceException e) {
+            log.warn("Direct DeepSeek unavailable: {}", e.getMessage());
+            return null;
         }
-        return false;
+    }
+
+    /** Tier 3: Static fallback when both AI services are down. */
+    private String buildFallbackReply() {
+        return "\uD83D\uDC4B Hi! I'm WellBot. I'm currently offline, but I'll be back soon. "
+                + "Please try again in a moment. "
+                + "In the meantime, you can check your wellness records in the app!";
+    }
+
+    // ── History helpers ────────────────────────────────────────────
+
+    /**
+     * Build a conversation history from the database.
+     * Returns the most recent {@link #MAX_HISTORY_TURNS} user/assistant pairs.
+     */
+    private List<Map<String, String>> buildHistory(User user) {
+        List<ChatMessage> recent = chatMessageRepository
+                .findByUserIdOrderByCreatedAtDesc(user.getId());
+
+        if (recent.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // DB returns newest-first; reverse to chronological order and limit
+        Collections.reverse(recent);
+        if (recent.size() > MAX_HISTORY_TURNS) {
+            recent = recent.subList(recent.size() - MAX_HISTORY_TURNS, recent.size());
+        }
+
+        List<Map<String, String>> history = new ArrayList<>();
+        for (ChatMessage msg : recent) {
+            history.add(Map.of("role", "user", "content", msg.getUserMessage()));
+            history.add(Map.of("role", "assistant", "content", msg.getBotResponse()));
+        }
+        return history;
+    }
+
+    private static String truncate(String s, int max) {
+        return s.length() <= max ? s : s.substring(0, max) + "...";
     }
 }

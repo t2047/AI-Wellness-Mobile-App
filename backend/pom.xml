@@ -75,6 +75,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- dotenv-java — load .env into system properties for Spring ${…} resolution -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

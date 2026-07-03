@@ -13,6 +13,7 @@ import com.wellnessapp.data.model.WellnessRecord
 import com.wellnessapp.databinding.ActivityHealthRecordBinding
 import com.wellnessapp.ui.chat.ChatActivity
 import com.wellnessapp.ui.login.LoginActivity
+import com.wellnessapp.ui.rag.RagActivity
 import com.wellnessapp.ui.recommendation.RecommendationActivity
 import com.wellnessapp.util.TokenManager
 import kotlinx.coroutines.launch
@@ -52,6 +53,10 @@ class HealthRecordActivity : AppCompatActivity() {
                 }
                 com.wellnessapp.R.id.action_recommendations -> {
                     startActivity(Intent(this, RecommendationActivity::class.java))
+                    true
+                }
+                com.wellnessapp.R.id.action_rag -> {
+                    startActivity(Intent(this, RagActivity::class.java))
                     true
                 }
                 com.wellnessapp.R.id.action_logout -> {

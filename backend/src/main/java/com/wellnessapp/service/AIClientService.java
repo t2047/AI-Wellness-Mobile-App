@@ -1,18 +1,21 @@
 package com.wellnessapp.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+
 /**
- * Client service for calling DeepSeek Chat Completions.
- * Falls back gracefully when the AI service is unavailable.
+ * Client service for calling DeepSeek Chat Completions API directly.
+ *
+ * <p>Acts as the second-tier fallback (the first tier is the Python agent's
+ * RAG-powered /chat endpoint). Uses {@link RestClient} (Spring 6.x).</p>
  *
  * @author WellnessApp Team
  */
@@ -23,82 +26,110 @@ public class AIClientService {
     private static final String DEEPSEEK_CHAT_URL = "https://api.deepseek.com/chat/completions";
     private static final String DEEPSEEK_MODEL = "deepseek-v4-flash";
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final String apiKey;
 
-    private static final String SYSTEM_PROMPT = """
+    /**
+     * Fallback system prompt (used when Python agent RAG is unavailable).
+     * The RAG pipeline has its own richer prompt with medical knowledge-base access.
+     */
+    static final String SYSTEM_PROMPT = """
             You are a friendly and knowledgeable wellness assistant named "WellBot".
             Your role is to provide helpful, evidence-based advice on health and wellness topics.
+
+            Current mode: FALLBACK (medical knowledge base is temporarily unavailable).
+            Your answers are based on your own training knowledge, not a curated medical corpus.
+            If you're unsure about a medical fact, say so clearly.
 
             Guidelines:
             - ONLY answer questions related to health, wellness, fitness, nutrition, sleep, mental health, and lifestyle.
             - If asked about topics outside wellness, politely redirect the user back to wellbeing.
             - Use the same language as the user.
-            - Keep responses concise (2-5 sentences) and actionable.
+            - Keep responses concise (2-4 sentences) and actionable.
             - Be encouraging and supportive.
             - Do NOT provide medical diagnoses. Always recommend consulting a healthcare professional for medical concerns.
-            - If you don't know something, be honest about it.
+            - If you don't know something or are unsure, be honest about it.
             """;
 
     public AIClientService(@Value("${deepseek.api-key:}") String apiKey) {
-        this.restTemplate = new RestTemplate();
         this.apiKey = apiKey;
+        this.restClient = RestClient.builder()
+                .baseUrl(DEEPSEEK_CHAT_URL)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
     }
 
-    /**
-     * Get a chat response from DeepSeek.
-     * Throws RuntimeException if the service is unavailable (caller should fall back).
-     */
+    // ── Public API ─────────────────────────────────────────────────
+
+    /** Single-turn convenience wrapper. */
     public String getChatResponse(String userMessage) {
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(Map.of("role", "system", "content", SYSTEM_PROMPT));
+        messages.add(Map.of("role", "user", "content", userMessage));
+        return chat(messages, 300);
+    }
+
+    /** Multi-turn chat with conversation history. */
+    public String chat(List<Map<String, String>> messages) {
+        return chat(messages, 300);
+    }
+
+    /** Multi-turn chat with configurable max tokens. */
+    public String chat(List<Map<String, String>> messages, int maxTokens) {
         if (apiKey == null || apiKey.isBlank()) {
-            throw new RuntimeException("DeepSeek API key is not configured");
+            throw new AiServiceException("DeepSeek API key is not configured");
         }
 
+        Map<String, Object> body = Map.of(
+                "model", DEEPSEEK_MODEL,
+                "messages", messages,
+                "max_tokens", maxTokens,
+                "temperature", 0.7,
+                "stream", false
+        );
+
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(apiKey);
-
-            Map<String, Object> body = Map.of(
-                    "model", DEEPSEEK_MODEL,
-                    "messages", List.of(
-                            Map.of("role", "system", "content", SYSTEM_PROMPT),
-                            Map.of("role", "user", "content", userMessage)
-                    ),
-                    "thinking", Map.of("type", "disabled"),
-                    "max_tokens", 300,
-                    "temperature", 0.7,
-                    "stream", false
-            );
-
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-            ResponseEntity<Map> response =
-                    restTemplate.postForEntity(DEEPSEEK_CHAT_URL, request, Map.class);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restClient.post()
+                    .header("Authorization", "Bearer " + apiKey)
+                    .body(body)
+                    .retrieve()
+                    .body(Map.class);
 
             return extractReply(response);
         } catch (Exception e) {
             log.error("DeepSeek API call failed: {}", e.getMessage());
-            throw new RuntimeException("DeepSeek API unavailable: " + e.getMessage());
+            throw new AiServiceException("DeepSeek API unavailable: " + e.getMessage(), e);
         }
     }
 
+    // ── Internal helpers ───────────────────────────────────────────
+
     @SuppressWarnings("unchecked")
-    private String extractReply(ResponseEntity<Map> response) {
-        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-            throw new RuntimeException("Unexpected DeepSeek response status");
+    private String extractReply(Map<String, Object> response) {
+        if (response == null) {
+            throw new AiServiceException("DeepSeek returned null response");
         }
 
         List<Map<String, Object>> choices =
-                (List<Map<String, Object>>) response.getBody().get("choices");
+                (List<Map<String, Object>>) response.get("choices");
         if (choices == null || choices.isEmpty()) {
-            throw new RuntimeException("DeepSeek response did not contain choices");
+            throw new AiServiceException("DeepSeek response did not contain choices");
         }
 
         Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
         if (message == null || message.get("content") == null) {
-            throw new RuntimeException("DeepSeek response did not contain message content");
+            throw new AiServiceException("DeepSeek response did not contain message content");
         }
 
         return message.get("content").toString().trim();
+    }
+
+    // ── Exception type ─────────────────────────────────────────────
+
+    /** Exception thrown when AI service is unavailable. */
+    public static class AiServiceException extends RuntimeException {
+        public AiServiceException(String message) { super(message); }
+        public AiServiceException(String message, Throwable cause) { super(message, cause); }
     }
 }

@@ -1,5 +1,8 @@
 package com.wellnessapp.dto;
 
+import java.util.List;
+import java.util.Map;
+
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +32,26 @@ public class ChatDTOs {
     public static class ChatResponse {
         private String reply;
         private String timestamp;
+
+        /** Source citations from RAG (populated when Tier-1 responds). */
+        @Builder.Default
+        private List<SourceInfo> sources = List.of();
+
+        /** Tool call trace (populated when Tier-1 responds). */
+        @Builder.Default
+        private List<Map<String, Object>> toolCalls = List.of();
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SourceInfo {
+        private int rank;
+        private String title;
+        private String section;
+        private String sourceUrl;
+        private double score;
     }
 
     @Data

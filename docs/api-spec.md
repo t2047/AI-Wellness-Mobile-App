@@ -160,6 +160,11 @@ DELETE /api/wellness-records/{id}
 
 Requires `Authorization: Bearer <token>`.
 
+The chatbot uses a **3-tier fallback pipeline**:
+1. **Python Agent RAG** (DeepSeek + [MSD Manuals](../ATTRIBUTION.md) medical knowledge base)
+2. **Direct DeepSeek** (no RAG, with conversation history)
+3. **Static fallback** (offline message)
+
 ### 3.1 Send Chat Message
 
 ```
@@ -173,14 +178,40 @@ POST /api/chat
 }
 ```
 
-**Response (200 OK):**
+**Response (200 OK) — Tier 1 (RAG):**
+```json
+{
+    "success": true,
+    "message": null,
+    "data": {
+        "reply": "Adults should aim for 7-9 hours of sleep per night. Consistency is key! [1]",
+        "timestamp": "2026-06-25T14:30:00",
+        "sources": [
+            {
+                "rank": 1,
+                "title": "Sleep Disorders",
+                "section": "Overview",
+                "sourceUrl": "https://www.msdmanuals.com/...",
+                "score": 0.92
+            }
+        ],
+        "toolCalls": [
+            {"tool": "rag_search", "arguments": {"question": "..."}, "result_summary": "..."}
+        ]
+    }
+}
+```
+
+**Response (200 OK) — Tier 2 (Direct DeepSeek, no RAG):**
 ```json
 {
     "success": true,
     "message": null,
     "data": {
         "reply": "Adults should aim for 7-9 hours of sleep per night. Consistency is key!",
-        "timestamp": "2026-06-25T14:30:00"
+        "timestamp": "2026-06-25T14:30:00",
+        "sources": [],
+        "toolCalls": []
     }
 }
 ```

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAG 测试页</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #1d2433;
+      --muted: #667085;
+      --line: #d7deea;
+      --primary: #1f6feb;
+      --primary-dark: #1557b0;
+      --ok: #0f9d58;
+      --warn: #b54708;
+      --danger: #b42318;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(180deg, #eef3ff 0%, var(--bg) 30%, #eef1f7 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+
+    .hero {
+      background: radial-gradient(circle at top right, rgba(31,111,235,.14), transparent 28%), var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 8px 30px rgba(16, 24, 40, .06);
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    p { line-height: 1.6; margin: 0 0 10px; }
+
+    .hint {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(16, 24, 40, .05);
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .row {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+
+    textarea {
+      min-height: 108px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 12px 0 4px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+
+    button:hover { background: var(--primary-dark); }
+    button.secondary { background: #344054; }
+    button.secondary:hover { background: #1f2937; }
+    button.ghost { background: #e9eef9; color: #1d2a44; }
+    button.ghost:hover { background: #dbe5f7; }
+    button.danger { background: #b42318; }
+    button.danger:hover { background: #8c1c12; }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fbfcfe;
+      font-size: 14px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill.ok { background: rgba(15,157,88,.12); color: var(--ok); }
+    .pill.warn { background: rgba(181,71,8,.12); color: var(--warn); }
+    .pill.err { background: rgba(180,35,24,.12); color: var(--danger); }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #0b1020;
+      color: #dbe7ff;
+      border-radius: 14px;
+      padding: 14px;
+      min-height: 340px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .grid, .two-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>RAG 测试页</h1>
+      <p>纯原生 HTML + JavaScript，无外部依赖。用于测试 <code>/rag/status</code>、<code>/rag/reindex</code> 和 <code>/rag/ask</code>。</p>
+      <p class="hint">默认请求地址是 <code>http://localhost:5001</code>。如果浏览器拦截跨域请求，需要后端允许 CORS，或者把这个页面通过同源方式托管后再访问。</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>请求配置</h2>
+
+        <div class="row">
+          <label for="baseUrl">Backend Base URL</label>
+          <input id="baseUrl" value="http://localhost:5001" placeholder="http://localhost:5001" />
+        </div>
+
+        <div class="two-col">
+          <div class="row">
+            <label for="topK">Top K</label>
+            <input id="topK" type="number" min="1" max="20" value="5" />
+          </div>
+          <div class="row">
+            <label for="forceReindex">Reindex Force</label>
+            <select id="forceReindex">
+              <option value="false">false</option>
+              <option value="true">true</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <label for="question">Question</label>
+          <textarea id="question" placeholder="例如：CAM 的安全性风险有哪些？">CAM 的安全性风险有哪些？</textarea>
+        </div>
+
+        <div class="actions">
+          <button id="btnStatus">GET /rag/status</button>
+          <button id="btnReindex" class="secondary">POST /rag/reindex</button>
+          <button id="btnFullReindex" class="danger">🔄 全部重建索引</button>
+          <button id="btnAsk">POST /rag/ask</button>
+          <button id="btnClear" class="ghost">Clear Output</button>
+        </div>
+
+        <div class="status" id="statusBar">
+          <span class="pill warn" id="statusPill">READY</span>
+          <span id="statusText">填写参数后点击按钮即可发起请求。</span>
+        </div>
+
+        <div class="small">
+          提示：如果 <code>/rag/reindex</code> 返回“找不到语料”，请先确认 <code>scraper/output/*_msd_chunks.jsonl</code> 已生成。
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>响应输出</h2>
+        <pre id="output">等待请求...</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const els = {
+      baseUrl: document.getElementById('baseUrl'),
+      topK: document.getElementById('topK'),
+      forceReindex: document.getElementById('forceReindex'),
+      question: document.getElementById('question'),
+      output: document.getElementById('output'),
+      statusPill: document.getElementById('statusPill'),
+      statusText: document.getElementById('statusText'),
+      btnStatus: document.getElementById('btnStatus'),
+      btnReindex: document.getElementById('btnReindex'),
+      btnFullReindex: document.getElementById('btnFullReindex'),
+      btnAsk: document.getElementById('btnAsk'),
+      btnClear: document.getElementById('btnClear'),
+    };
+
+    function setStatus(kind, text) {
+      els.statusPill.className = 'pill ' + kind;
+      els.statusPill.textContent = kind.toUpperCase();
+      els.statusText.textContent = text;
+    }
+
+    function pretty(value) {
+      if (typeof value === 'string') return value;
+      try {
+        return JSON.stringify(value, null, 2);
+      } catch {
+        return String(value);
+      }
+    }
+
+    async function requestJson(path, options = {}) {
+      const baseUrl = els.baseUrl.value.trim().replace(/\/$/, '');
+      const url = baseUrl + path;
+      setStatus('warn', `请求中：${url}`);
+
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+      });
+
+      const text = await response.text();
+      let payload;
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        payload = text;
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${pretty(payload)}`);
+      }
+
+      return payload;
+    }
+
+    async function handleStatus() {
+      try {
+        const data = await requestJson('/rag/status', { method: 'GET' });
+        els.output.textContent = pretty(data);
+        setStatus('ok', 'RAG 状态请求成功');
+      } catch (error) {
+        els.output.textContent = String(error);
+        setStatus('err', 'RAG 状态请求失败');
+      }
+    }
+
+    let _pollTimer = null;
+
+    async function startReindex(force) {
+      // Cancel any existing poll
+      if (_pollTimer) {
+        clearInterval(_pollTimer);
+        _pollTimer = null;
+      }
+
+      try {
+        const data = await requestJson('/rag/reindex', {
+          method: 'POST',
+          body: JSON.stringify({ force }),
+        });
+        const taskId = data.data.taskId;
+        els.output.textContent = pretty({ status: 'started', taskId });
+        setStatus('warn', `重建索引已启动，任务 ID: ${taskId}，正在轮询进度...`);
+        pollReindexStatus(taskId);
+      } catch (error) {
+        els.output.textContent = String(error);
+        setStatus('err', '启动重建索引失败');
+      }
+    }
+
+    async function pollReindexStatus(taskId) {
+      const baseUrl = els.baseUrl.value.trim().replace(/\/$/, '');
+      const url = `${baseUrl}/rag/reindex-status/${taskId}`;
+
+      const poll = async () => {
+        try {
+          const resp = await fetch(url);
+          const body = await resp.json();
+          if (!body.success) {
+            throw new Error(body.error);
+          }
+          const task = body.data;
+          els.output.textContent = pretty(task);
+          setStatus('warn', `${task.phase}: ${task.message}`);
+
+          if (task.status === 'completed') {
+            setStatus('ok', task.message);
+            if (_pollTimer) {
+              clearInterval(_pollTimer);
+              _pollTimer = null;
+            }
+          } else if (task.status === 'failed') {
+            setStatus('err', task.message);
+            if (_pollTimer) {
+              clearInterval(_pollTimer);
+              _pollTimer = null;
+            }
+          }
+        } catch (err) {
+          // Only stop polling if the task is likely done (404 = not found)
+          if (String(err).includes('404') || String(err).includes('not found')) {
+            setStatus('err', `任务 ${taskId} 不存在`);
+            if (_pollTimer) {
+              clearInterval(_pollTimer);
+              _pollTimer = null;
+            }
+          }
+          // Otherwise keep polling — transient network errors happen
+        }
+      };
+
+      // Poll immediately, then every 2 seconds
+      await poll();
+      if (!_pollTimer) {
+        _pollTimer = setInterval(poll, 2000);
+      }
+    }
+
+    async function handleReindex() {
+      const force = els.forceReindex.value === 'true';
+      await startReindex(force);
+    }
+
+    async function handleFullReindex() {
+      await startReindex(true);
+    }
+
+    async function handleAsk() {
+      try {
+        const question = els.question.value.trim();
+        if (!question) {
+          throw new Error('Question 不能为空');
+        }
+        const topK = Number(els.topK.value || 5);
+        const data = await requestJson('/rag/ask', {
+          method: 'POST',
+          body: JSON.stringify({ question, topK }),
+        });
+        els.output.textContent = pretty(data);
+        setStatus('ok', '问答请求成功');
+      } catch (error) {
+        els.output.textContent = String(error);
+        setStatus('err', '问答请求失败');
+      }
+    }
+
+    els.btnStatus.addEventListener('click', handleStatus);
+    els.btnReindex.addEventListener('click', handleReindex);
+    els.btnFullReindex.addEventListener('click', handleFullReindex);
+    els.btnAsk.addEventListener('click', handleAsk);
+    els.btnClear.addEventListener('click', () => {
+      els.output.textContent = '等待请求...';
+      setStatus('warn', '输出已清空');
+    });
+
+    setStatus('warn', 'READY');
+  </script>
+</body>
+</html>

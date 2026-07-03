@@ -8,6 +8,24 @@ backend/.mvn/
 android/.gradle/
 android/build/
 android/app/build/
+
+# Python
+__pycache__/
+*.pyc
+agent/.rag_store/
+
+# Scraper data (generated)
+scraper/output/
+
+# Environment
+.env
+.rag_store/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
 android/local.properties
 *.apk
 *.aab
@@ -35,3 +53,4 @@ agent/.venv/
 
 # Environment
 .env
+

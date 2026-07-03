@@ -31,7 +31,8 @@ app:
     expiration-ms: 86400000  # 24 hours
 
 # DeepSeek Chatbot Configuration
-# Fill in this one value with your DeepSeek API key.
+# Key is loaded from ../.env by DotenvConfig (dotenv-java).
+# Falls back to DEEPSEEK_API_KEY environment variable.
 deepseek:
   api-key: ${DEEPSEEK_API_KEY:}
 

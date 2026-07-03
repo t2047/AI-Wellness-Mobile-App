@@ -51,4 +51,18 @@ interface ApiService {
 
     @GET("api/recommendations")
     suspend fun getRecommendations(): Response<ApiResponse<List<Recommendation>>>
+
+    // --- RAG (Drug Knowledge) ---
+
+    @GET("api/rag/status")
+    suspend fun getRagStatus(): Response<ApiResponse<RagStatusResponse>>
+
+    @POST("api/rag/reindex")
+    suspend fun startRagReindex(@Body request: Map<String, Boolean>): Response<ApiResponse<RagReindexResponse>>
+
+    @GET("api/rag/reindex-status/{taskId}")
+    suspend fun getRagReindexStatus(@Path("taskId") taskId: String): Response<ApiResponse<RagReindexStatusResponse>>
+
+    @POST("api/rag/ask")
+    suspend fun askRag(@Body request: RagAskRequest): Response<ApiResponse<RagAskResponse>>
 }
