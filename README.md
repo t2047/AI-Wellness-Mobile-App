@@ -18,11 +18,14 @@ Team project for Mobile Application Development CA.
 
 ### 1. Configure API Keys
 
-Edit `CA/.env` at the project root with your API keys:
+Copy `.env.example` to `.env` at the project root and fill in local API keys.
+Never commit `.env` or paste real keys into shared docs/code.
 
 ```env
-DEEPSEEK_API_KEY=sk-your-key-here
-DOUBAO_API_KEY=your-key-here
+AI_PROVIDER=openai
+OPENAI_API_KEY=
+OPENAI_CHAT_URL=https://www.packyapi.com/v1/chat/completions
+OPENAI_MODEL=gpt-5.5
 ```
 
 ### 2. Start the Python Agent (RAG + AI Chat)
@@ -38,6 +41,13 @@ python main.py
 ```bash
 cd backend
 mvn spring-boot:run
+```
+
+For the dedicated CA test profile:
+
+```bash
+cd backend
+mvn spring-boot:run -Dspring-boot.run.profiles=CA
 ```
 
 ### 4. Android
@@ -67,12 +77,13 @@ Open `android/` in Android Studio, sync Gradle, and run on emulator.
 - **Backend:** Spring Boot 3.2, Spring Security, JPA
 - **Database:** MySQL 8.0 / H2 (dev)
 - **Auth:** JWT (jjwt)
-- **AI:** DeepSeek LLM + Doubao Embeddings + RAG (Python agent)
+- **AI:** OpenAI-compatible GPT fallback, optional DeepSeek + Doubao RAG (Python agent)
 
 ## Documentation
 
 - [Content Attribution](ATTRIBUTION.md) — MSD Manuals & third-party licenses
 - [Backend Setup & Architecture](docs/README.md)
+- [CA Testing Guide](docs/CA_TESTING.md)
 - [API Specification](docs/api-spec.md)
 - [Database Design](docs/database-design.md)
 - [Development Prompts](docs/prompts.md)

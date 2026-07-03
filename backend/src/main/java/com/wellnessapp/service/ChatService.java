@@ -43,6 +43,7 @@ public class ChatService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final AIClientService aiClientService;
+    private final WellnessInsightsService wellnessInsightsService;
     private final RestClient restClient;
     private final String agentBaseUrl;
 
@@ -52,9 +53,11 @@ public class ChatService {
     public ChatService(
             ChatMessageRepository chatMessageRepository,
             AIClientService aiClientService,
+            WellnessInsightsService wellnessInsightsService,
             @Value("${agent.python.base-url:http://localhost:5001}") String agentBaseUrl) {
         this.chatMessageRepository = chatMessageRepository;
         this.aiClientService = aiClientService;
+        this.wellnessInsightsService = wellnessInsightsService;
         this.agentBaseUrl = agentBaseUrl;
         this.restClient = RestClient.builder()
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
@@ -72,22 +75,23 @@ public class ChatService {
 
         // 1. Build conversation history from DB
         List<Map<String, String>> history = buildHistory(user);
+        String wellnessContext = wellnessInsightsService.buildChatContext(user, 14);
 
         // 2. Try 3 tiers
-        String reply = tryPythonAgent(userMessage, history);
+        String reply = tryPythonAgent(userMessage, history, wellnessContext);
         if (reply != null) {
             log.info("User {} → Tier-1 (Python RAG) responded", user.getId());
         }
 
         if (reply == null) {
-            reply = tryDirectDeepSeek(userMessage, history);
+            reply = tryDirectDeepSeek(userMessage, history, wellnessContext);
             if (reply != null) {
                 log.info("User {} → Tier-2 (Direct DeepSeek) responded", user.getId());
             }
         }
 
         if (reply == null) {
-            reply = buildFallbackReply();
+            reply = buildFallbackReply(wellnessContext);
             log.warn("User {} → Tier-3 (static fallback) used", user.getId());
         }
 
@@ -124,11 +128,18 @@ public class ChatService {
     // ── 3-Tier fallback ────────────────────────────────────────────
 
     /** Tier 1: Python Agent with RAG tool calling. */
-    private String tryPythonAgent(String userMessage, List<Map<String, String>> history) {
+    private String tryPythonAgent(
+            String userMessage,
+            List<Map<String, String>> history,
+            String wellnessContext) {
         try {
+            List<Map<String, String>> contextualHistory = new ArrayList<>();
+            contextualHistory.add(Map.of("role", "system", "content", wellnessContext));
+            contextualHistory.addAll(history);
+
             Map<String, Object> body = Map.of(
                     "message", userMessage,
-                    "history", history
+                    "history", contextualHistory
             );
 
             @SuppressWarnings("unchecked")
@@ -150,11 +161,16 @@ public class ChatService {
     }
 
     /** Tier 2: Direct DeepSeek call (no RAG). */
-    private String tryDirectDeepSeek(String userMessage, List<Map<String, String>> history) {
+    private String tryDirectDeepSeek(
+            String userMessage,
+            List<Map<String, String>> history,
+            String wellnessContext) {
         try {
             // Build message list: system prompt + history + new user message
             List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "system", "content", AIClientService.SYSTEM_PROMPT));
+            messages.add(Map.of(
+                    "role", "system",
+                    "content", AIClientService.SYSTEM_PROMPT + "\n\n" + wellnessContext));
             messages.addAll(history);
             messages.add(Map.of("role", "user", "content", userMessage));
 
@@ -166,7 +182,12 @@ public class ChatService {
     }
 
     /** Tier 3: Static fallback when both AI services are down. */
-    private String buildFallbackReply() {
+    private String buildFallbackReply(String wellnessContext) {
+        if (wellnessContext.contains("has no wellness records")) {
+            return "I cannot see any wellness records from the last 14 days yet. "
+                    + "Please log your sleep and activity first, then I can answer questions "
+                    + "about your weekly sleep, exercise, and improvement priorities.";
+        }
         return "\uD83D\uDC4B Hi! I'm WellBot. I'm currently offline, but I'll be back soon. "
                 + "Please try again in a moment. "
                 + "In the meantime, you can check your wellness records in the app!";

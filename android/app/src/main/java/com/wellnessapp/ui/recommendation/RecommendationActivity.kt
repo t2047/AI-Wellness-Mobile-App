@@ -1,5 +1,6 @@
 package com.wellnessapp.ui.recommendation
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -7,8 +8,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.wellnessapp.data.api.RetrofitClient
-import com.wellnessapp.data.model.Recommendation
 import com.wellnessapp.databinding.ActivityRecommendationBinding
+import com.wellnessapp.ui.summary.WeeklySummaryActivity
 import kotlinx.coroutines.launch
 
 /**
@@ -35,6 +36,9 @@ class RecommendationActivity : AppCompatActivity() {
 
         binding.swipeRefresh.setOnRefreshListener { loadRecommendations() }
         binding.btnGenerate.setOnClickListener { triggerRecommendation() }
+        binding.btnWeeklySummaries.setOnClickListener {
+            startActivity(Intent(this, WeeklySummaryActivity::class.java))
+        }
 
         loadRecommendations()
     }

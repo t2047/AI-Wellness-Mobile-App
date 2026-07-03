@@ -74,6 +74,27 @@ CREATE TABLE IF NOT EXISTS recommendations (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------------------------------
+-- Table: weekly_summaries
+-- Description: Stores manually generated weekly health summaries.
+-- ----------------------------------------------------
+CREATE TABLE IF NOT EXISTS weekly_summaries (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    week_start_date DATE NOT NULL,
+    week_end_date DATE NOT NULL,
+    average_sleep_hours DECIMAL(4,1) COMMENT 'Average sleep hours in this summary period',
+    total_activity_minutes INT DEFAULT 0 COMMENT 'Total activity minutes in this summary period',
+    active_days INT DEFAULT 0 COMMENT 'Number of days with recorded activity',
+    record_count INT DEFAULT 0 COMMENT 'Number of wellness records summarized',
+    summary_text TEXT COMMENT 'Generated weekly summary',
+    recommendation_text TEXT COMMENT 'Generated recommendation for next week',
+    generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_weekly_summaries_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_weekly_summaries_user_id (user_id),
+    INDEX idx_weekly_summaries_generated_at (generated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------------------------------
 -- Insert test user for development
 -- Password: Test1234! (BCrypt hashed)
 -- ----------------------------------------------------

@@ -22,6 +22,7 @@ from pathlib import Path
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import requests
 from agent import WellnessAgent
 from rag_service import RagService
 from dotenv import load_dotenv
@@ -38,9 +39,59 @@ CORS(app)
 # Configuration
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8080")
 JWT_TOKEN = os.environ.get("AGENT_JWT_TOKEN", "")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY") or os.environ.get("GPT_API_KEY", "")
+OPENAI_CHAT_URL = os.environ.get("OPENAI_CHAT_URL", "https://api.openai.com/v1/chat/completions")
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
 agent = WellnessAgent(backend_url=BACKEND_URL, jwt_token=JWT_TOKEN)
-rag_service = RagService()
+rag_service = None
+rag_service_error = None
+try:
+    rag_service = RagService()
+except Exception as exc:
+    rag_service_error = str(exc)
+
+
+def direct_gpt_chat(message, history=None, system_prompt=None):
+    """OpenAI-compatible direct chat fallback for CA testing without RAG embeddings."""
+    if not OPENAI_API_KEY:
+        raise RuntimeError("OPENAI_API_KEY or GPT_API_KEY is not configured")
+
+    messages = [{
+        "role": "system",
+        "content": system_prompt or (
+            "You are WellBot, a concise wellness assistant. "
+            "Answer health and wellness questions clearly, avoid diagnosis, "
+            "and recommend professional medical help for medical concerns."
+        )
+    }]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": message})
+
+    response = requests.post(
+        OPENAI_CHAT_URL,
+        headers={
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": OPENAI_MODEL,
+            "messages": messages,
+            "max_tokens": 500,
+            "stream": False,
+        },
+        timeout=60,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    choices = payload.get("choices") or []
+    if not choices:
+        raise RuntimeError("GPT response did not contain choices")
+    content = ((choices[0].get("message") or {}).get("content") or "").strip()
+    if not content:
+        raise RuntimeError("GPT response did not contain message content")
+    return content
 
 
 @app.route("/health", methods=["GET"])
@@ -49,7 +100,9 @@ def health():
     return jsonify({
         "status": "UP",
         "service": "wellness-agent",
-        "version": "0.1.0"
+        "version": "0.1.0",
+        "ragStatus": "UP" if rag_service else "UNAVAILABLE",
+        "ragError": rag_service_error
     })
 
 
@@ -111,6 +164,12 @@ def analyze():
 
 @app.route("/rag/reindex", methods=["POST"])
 def rag_reindex():
+    if rag_service is None:
+        return jsonify({
+            "success": False,
+            "error": f"RAG service unavailable: {rag_service_error}"
+        }), 503
+
     data = request.get_json(silent=True) or {}
     force = bool(data.get("force", False))
 
@@ -132,6 +191,12 @@ def rag_reindex():
 
 @app.route("/rag/reindex-status/<task_id>", methods=["GET"])
 def rag_reindex_status(task_id: str):
+    if rag_service is None:
+        return jsonify({
+            "success": False,
+            "error": f"RAG service unavailable: {rag_service_error}"
+        }), 503
+
     task = rag_service.get_reindex_task(task_id)
     if task is None:
         return jsonify({
@@ -157,6 +222,37 @@ def rag_reindex_status(task_id: str):
 
 @app.route("/rag/ask", methods=["POST"])
 def rag_ask():
+    if rag_service is None:
+        data = request.get_json(silent=True) or {}
+        question = str(data.get("question", "")).strip()
+        if not question:
+            return jsonify({
+                "success": False,
+                "error": "question is required"
+            }), 400
+        try:
+            answer = direct_gpt_chat(
+                question,
+                system_prompt=(
+                    "You are WellBot. RAG document retrieval is unavailable in this CA test "
+                    "environment because the embedding provider is not configured. "
+                    "Answer from general wellness knowledge, be concise, and state that no "
+                    "MSD source citations are available."
+                )
+            )
+            return jsonify({
+                "success": True,
+                "answer": answer,
+                "sources": [],
+                "fallback": "direct_gpt_no_rag",
+                "warning": f"RAG service unavailable: {rag_service_error}"
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "error": str(e)
+            }), 500
+
     data = request.get_json(silent=True) or {}
     question = str(data.get("question", "")).strip()
     top_k = data.get("topK")
@@ -179,6 +275,23 @@ def rag_ask():
 
 @app.route("/rag/status", methods=["GET"])
 def rag_status():
+    if rag_service is None:
+        return jsonify({
+            "success": True,
+            "data": {
+                "indexPath": None,
+                "builtAt": None,
+                "documentCount": 0,
+                "sourceCount": 0,
+                "corpusGlob": None,
+                "deepseekModel": None,
+                "doubaoModel": None,
+                "status": "UNAVAILABLE",
+                "error": rag_service_error,
+                "fallback": "direct_gpt_no_rag"
+            }
+        })
+
     try:
         return jsonify({
             "success": True,
@@ -193,6 +306,33 @@ def rag_status():
 
 @app.route("/chat", methods=["POST"])
 def chat():
+    if rag_service is None:
+        data = request.get_json(silent=True) or {}
+        message = str(data.get("message", "")).strip()
+        history = data.get("history")
+
+        if not message:
+            return jsonify({
+                "success": False,
+                "error": "message is required"
+            }), 400
+
+        try:
+            answer = direct_gpt_chat(message=message, history=history)
+            return jsonify({
+                "success": True,
+                "answer": answer,
+                "tool_calls": [],
+                "sources": [],
+                "fallback": "direct_gpt_no_rag",
+                "warning": f"RAG chat unavailable: {rag_service_error}"
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "error": str(e)
+            }), 500
+
     """
     LLM Chat endpoint with RAG tool calling.
 
@@ -242,4 +382,5 @@ def chat():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5001))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    app.run(host="0.0.0.0", port=port, debug=debug, use_reloader=debug)

@@ -12,6 +12,10 @@ This service now exposes two flows:
 Fill these in manually before running the service:
 
 ```bash
+OPENAI_API_KEY=
+OPENAI_CHAT_URL=https://www.packyapi.com/v1/chat/completions
+OPENAI_MODEL=gpt-5.5
+
 DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-chat
@@ -24,6 +28,11 @@ RAG_CORPUS_GLOB=../scraper/output/*_msd_chunks.jsonl
 RAG_STORE_PATH=.rag_store/rag_index.json
 RAG_TOP_K=5
 ```
+
+`DOUBAO_API_KEY` is only required for full embedding-based RAG indexing.
+If it is missing, the agent still starts and keeps `/chat` and `/rag/ask`
+available through direct GPT fallback, while `/rag/reindex` reports that RAG
+indexing is unavailable.
 
 ## Run
 

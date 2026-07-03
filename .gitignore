@@ -1,6 +1,7 @@
 # Maven
 backend/target/
 backend/.mvn/
+backend/data/
 *.jar
 *.war
 
@@ -17,9 +18,20 @@ agent/.rag_store/
 # Scraper data (generated)
 scraper/output/
 
+# Temporary generated files
+tmp/
+
 # Environment
 .env
+.env.*
+!.env.example
 .rag_store/
+*.pem
+*.p12
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist
 
 # IDE
 .idea/
@@ -53,4 +65,6 @@ agent/.venv/
 
 # Environment
 .env
+.env.*
+!.env.example
 

@@ -1,0 +1,35 @@
+# CA test profile. Activate with:
+#   mvn spring-boot:run -Dspring-boot.run.profiles=CA
+#
+# Secrets still come from the project-root .env file and must not be committed.
+
+spring:
+  datasource:
+    url: jdbc:h2:file:./data/ca-test-db;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+ai:
+  provider: ${AI_PROVIDER:openai}
+
+openai:
+  api-key: ${OPENAI_API_KEY:${GPT_API_KEY:}}
+  chat-url: ${OPENAI_CHAT_URL:https://www.packyapi.com/v1/chat/completions}
+  model: ${OPENAI_MODEL:gpt-5.5}
+
+agent:
+  python:
+    enabled: true
+    base-url: ${AGENT_BASE_URL:http://localhost:5001}
