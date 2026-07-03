@@ -28,12 +28,16 @@ cp .env.example .env
 # Then edit .env with your real API keys
 ```
 
-Required keys:
+Common keys:
 
 | Variable | Description |
 |----------|-------------|
-| `DEEPSEEK_API_KEY` | DeepSeek LLM API key |
-| `DOUBAO_API_KEY` | Doubao Embedding API key (for RAG) |
+| `AI_PROVIDER` | `openai` for OpenAI-compatible GPT fallback, or `deepseek` for DeepSeek |
+| `OPENAI_API_KEY` | OpenAI-compatible GPT API key |
+| `OPENAI_CHAT_URL` | Chat completions endpoint, for example a PackyAPI-compatible URL |
+| `OPENAI_MODEL` | GPT model name used for direct chatbot fallback |
+| `DEEPSEEK_API_KEY` | Optional original DeepSeek LLM API key |
+| `DOUBAO_API_KEY` | Optional original Doubao embedding API key for full RAG indexing |
 
 The `.env` file is loaded by:
 - **Java Backend**: `DotenvConfig` (via `dotenv-java` `EnvironmentPostProcessor`) at startup
@@ -59,6 +63,16 @@ H2 Console: http://localhost:8080/h2-console
 - Username: `sa`
 - Password: (empty)
 
+### Run with the CA test profile
+
+The CA profile uses a local H2 file database under `backend/data/` and the
+OpenAI-compatible GPT fallback settings from `.env`.
+
+```bash
+cd backend
+mvn spring-boot:run -Dspring-boot.run.profiles=CA
+```
+
 ### Run with MySQL
 
 ```bash
@@ -82,7 +96,7 @@ Client → POST /api/chat
           ├─ Tier 1: Python Agent /chat ─── DeepSeek + RAG (MSD Medical Knowledge Base)
           │   └─ 失败 → 走 Tier 2
           │
-          ├─ Tier 2: AIClientService 直连 DeepSeek (无 RAG，但有历史对话)
+          ├─ Tier 2: AIClientService 直连 OpenAI-compatible GPT or DeepSeek
           │   └─ 失败 → 走 Tier 3
           │
           └─ Tier 3: 静态 Fallback 消息
@@ -90,7 +104,7 @@ Client → POST /api/chat
 
 The chatbot intelligently degrades:
 1. **Best case**: RAG-augmented answers with medical citations from the MSD Manuals knowledge base (see [ATTRIBUTION.md](../ATTRIBUTION.md) for content licensing)
-2. **Degraded**: Direct DeepSeek with conversation history but no RAG
+2. **Degraded**: Direct OpenAI-compatible GPT/DeepSeek with conversation history but no RAG
 3. **Offline**: Simple static message when both services are unavailable
 
 ### AI Component: Python Agent
@@ -99,7 +113,7 @@ The Python agent (`agent/`) is a separate Flask microservice that provides:
 
 | Endpoint | Description |
 |----------|-------------|
-| `POST /chat` | LLM chat with RAG tool calling (LLM decides when to search) |
+| `POST /chat` | LLM chat with RAG tool calling; falls back to direct GPT if embeddings are unavailable |
 | `POST /rag/reindex` | Rebuild the RAG index from scraper output |
 | `POST /rag/ask` | One-shot RAG question-answering |
 | `GET /rag/status` | Check RAG index status |
@@ -126,7 +140,7 @@ backend/
 │   ├── repository/                       # Spring Data repositories
 │   ├── security/                         # JWT & Spring Security
 │   └── service/
-│       ├── AIClientService.java          # Direct DeepSeek API (Tier-2 fallback)
+│       ├── AIClientService.java          # Direct OpenAI-compatible GPT/DeepSeek API (Tier-2 fallback)
 │       ├── ChatService.java              # 3-tier fallback chat logic
 │       ├── RagService.java               # Proxy to Python agent RAG endpoints
 │       ├── AuthService.java              # Authentication logic

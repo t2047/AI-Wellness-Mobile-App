@@ -52,6 +52,14 @@ interface ApiService {
     @GET("api/recommendations")
     suspend fun getRecommendations(): Response<ApiResponse<List<Recommendation>>>
 
+    // --- Weekly Summaries ---
+
+    @POST("api/weekly-summaries/generate")
+    suspend fun generateWeeklySummary(): Response<ApiResponse<WeeklySummary>>
+
+    @GET("api/weekly-summaries")
+    suspend fun getWeeklySummaries(): Response<ApiResponse<List<WeeklySummary>>>
+
     // --- RAG (Drug Knowledge) ---
 
     @GET("api/rag/status")

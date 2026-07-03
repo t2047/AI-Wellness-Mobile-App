@@ -68,6 +68,21 @@ data class Recommendation(
     @SerializedName("isRead") val isRead: Boolean = false
 )
 
+// --- Weekly Summary ---
+
+data class WeeklySummary(
+    @SerializedName("id") val id: Long? = null,
+    @SerializedName("weekStartDate") val weekStartDate: String,
+    @SerializedName("weekEndDate") val weekEndDate: String,
+    @SerializedName("averageSleepHours") val averageSleepHours: Double? = null,
+    @SerializedName("totalActivityMinutes") val totalActivityMinutes: Int = 0,
+    @SerializedName("activeDays") val activeDays: Int = 0,
+    @SerializedName("recordCount") val recordCount: Int = 0,
+    @SerializedName("summaryText") val summaryText: String,
+    @SerializedName("recommendationText") val recommendationText: String,
+    @SerializedName("generatedAt") val generatedAt: String? = null
+)
+
 // --- Common API Response Wrapper ---
 
 data class ApiResponse<T>(

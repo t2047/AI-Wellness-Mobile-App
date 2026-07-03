@@ -1,6 +1,7 @@
 package com.wellnessapp.service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,10 +13,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 /**
- * Client service for calling DeepSeek Chat Completions API directly.
+ * Client service for calling the configured direct AI chat provider.
  *
  * <p>Acts as the second-tier fallback (the first tier is the Python agent's
- * RAG-powered /chat endpoint). Uses {@link RestClient} (Spring 6.x).</p>
+ * RAG-powered /chat endpoint). Supports OpenAI GPT and DeepSeek through
+ * Chat Completions-compatible APIs. Uses {@link RestClient} (Spring 6.x).</p>
  *
  * @author WellnessApp Team
  */
@@ -23,11 +25,12 @@ import org.springframework.web.client.RestClient;
 public class AIClientService {
 
     private static final Logger log = LoggerFactory.getLogger(AIClientService.class);
-    private static final String DEEPSEEK_CHAT_URL = "https://api.deepseek.com/chat/completions";
-    private static final String DEEPSEEK_MODEL = "deepseek-v4-flash";
 
     private final RestClient restClient;
+    private final String provider;
     private final String apiKey;
+    private final String chatUrl;
+    private final String model;
 
     /**
      * Fallback system prompt (used when Python agent RAG is unavailable).
@@ -51,10 +54,19 @@ public class AIClientService {
             - If you don't know something or are unsure, be honest about it.
             """;
 
-    public AIClientService(@Value("${deepseek.api-key:}") String apiKey) {
-        this.apiKey = apiKey;
+    public AIClientService(
+            @Value("${ai.provider:openai}") String provider,
+            @Value("${openai.api-key:}") String openAiApiKey,
+            @Value("${openai.chat-url:https://api.openai.com/v1/chat/completions}") String openAiChatUrl,
+            @Value("${openai.model:gpt-4o-mini}") String openAiModel,
+            @Value("${deepseek.api-key:}") String deepSeekApiKey,
+            @Value("${deepseek.chat-url:https://api.deepseek.com/chat/completions}") String deepSeekChatUrl,
+            @Value("${deepseek.model:deepseek-chat}") String deepSeekModel) {
+        this.provider = normalizeProvider(provider);
+        this.apiKey = "deepseek".equals(this.provider) ? deepSeekApiKey : openAiApiKey;
+        this.chatUrl = "deepseek".equals(this.provider) ? deepSeekChatUrl : openAiChatUrl;
+        this.model = "deepseek".equals(this.provider) ? deepSeekModel : openAiModel;
         this.restClient = RestClient.builder()
-                .baseUrl(DEEPSEEK_CHAT_URL)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
@@ -77,20 +89,22 @@ public class AIClientService {
     /** Multi-turn chat with configurable max tokens. */
     public String chat(List<Map<String, String>> messages, int maxTokens) {
         if (apiKey == null || apiKey.isBlank()) {
-            throw new AiServiceException("DeepSeek API key is not configured");
+            throw new AiServiceException(provider + " API key is not configured");
         }
 
-        Map<String, Object> body = Map.of(
-                "model", DEEPSEEK_MODEL,
-                "messages", messages,
-                "max_tokens", maxTokens,
-                "temperature", 0.7,
-                "stream", false
-        );
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", model);
+        body.put("messages", messages);
+        body.put("max_tokens", maxTokens);
+        body.put("stream", false);
+        if ("deepseek".equals(provider)) {
+            body.put("temperature", 0.7);
+        }
 
         try {
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restClient.post()
+                    .uri(chatUrl)
                     .header("Authorization", "Bearer " + apiKey)
                     .body(body)
                     .retrieve()
@@ -98,8 +112,8 @@ public class AIClientService {
 
             return extractReply(response);
         } catch (Exception e) {
-            log.error("DeepSeek API call failed: {}", e.getMessage());
-            throw new AiServiceException("DeepSeek API unavailable: " + e.getMessage(), e);
+            log.error("{} API call failed: {}", provider, e.getMessage());
+            throw new AiServiceException(provider + " API unavailable: " + e.getMessage(), e);
         }
     }
 
@@ -108,21 +122,32 @@ public class AIClientService {
     @SuppressWarnings("unchecked")
     private String extractReply(Map<String, Object> response) {
         if (response == null) {
-            throw new AiServiceException("DeepSeek returned null response");
+            throw new AiServiceException(provider + " returned null response");
         }
 
         List<Map<String, Object>> choices =
                 (List<Map<String, Object>>) response.get("choices");
         if (choices == null || choices.isEmpty()) {
-            throw new AiServiceException("DeepSeek response did not contain choices");
+            throw new AiServiceException(provider + " response did not contain choices");
         }
 
         Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
         if (message == null || message.get("content") == null) {
-            throw new AiServiceException("DeepSeek response did not contain message content");
+            throw new AiServiceException(provider + " response did not contain message content");
         }
 
         return message.get("content").toString().trim();
+    }
+
+    private String normalizeProvider(String provider) {
+        if (provider == null || provider.isBlank()) {
+            return "openai";
+        }
+        String normalized = provider.trim().toLowerCase();
+        if (!"openai".equals(normalized) && !"deepseek".equals(normalized)) {
+            throw new AiServiceException("Unsupported AI provider: " + provider);
+        }
+        return normalized;
     }
 
     // ── Exception type ─────────────────────────────────────────────
