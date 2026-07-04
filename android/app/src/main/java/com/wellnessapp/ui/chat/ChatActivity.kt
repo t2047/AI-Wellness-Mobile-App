@@ -1,15 +1,23 @@
 package com.wellnessapp.ui.chat
 
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import android.view.inputmethod.EditorInfo
 import android.view.View
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.wellnessapp.R
 import com.wellnessapp.data.api.RetrofitClient
 import com.wellnessapp.data.model.ChatRequest
 import com.wellnessapp.databinding.ActivityChatBinding
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 /**
  * Chat screen — users can chat with WellBot, the wellness AI assistant.
@@ -20,6 +28,23 @@ class ChatActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityChatBinding
     private lateinit var adapter: ChatMessageAdapter
+    private val speechLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val spokenText = result.data
+                    ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                    ?.firstOrNull()
+                    ?.trim()
+                    .orEmpty()
+                if (spokenText.isNotBlank()) {
+                    binding.etMessage.setText(spokenText)
+                    binding.etMessage.setSelection(spokenText.length)
+                    sendMessage()
+                } else {
+                    Toast.makeText(this, R.string.voice_not_recognized, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +58,7 @@ class ChatActivity : AppCompatActivity() {
         binding.recyclerView.adapter = adapter
 
         binding.btnSend.setOnClickListener { sendMessage() }
+        binding.btnVoice.setOnClickListener { startVoiceInput() }
         binding.etMessage.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 sendMessage()
@@ -43,6 +69,23 @@ class ChatActivity : AppCompatActivity() {
         }
 
         loadHistory()
+    }
+
+    private fun startVoiceInput() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
+            putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_prompt))
+        }
+
+        try {
+            speechLauncher.launch(intent)
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(this, R.string.voice_unavailable, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun sendMessage() {
@@ -104,6 +147,7 @@ class ChatActivity : AppCompatActivity() {
     private fun showLoading(loading: Boolean) {
         binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
         binding.btnSend.isEnabled = !loading
+        binding.btnVoice.isEnabled = !loading
     }
 }
 
