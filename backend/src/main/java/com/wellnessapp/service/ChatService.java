@@ -35,6 +35,7 @@ import com.wellnessapp.repository.ChatMessageRepository;
  * </ol>
  *
  * @author WellnessApp Team
+ * @author ZHAO LEI
  */
 @Service
 public class ChatService {
@@ -78,8 +79,13 @@ public class ChatService {
         String wellnessContext = wellnessInsightsService.buildChatContext(user, 14);
 
         // 2. Try 3 tiers
-        String reply = tryPythonAgent(userMessage, history, wellnessContext);
-        if (reply != null) {
+        AgentReply agentReply = tryPythonAgent(userMessage, history, wellnessContext);
+        String reply = agentReply != null ? agentReply.reply() : null;
+        List<SourceInfo> sources = agentReply != null ? agentReply.sources() : List.of();
+        List<Map<String, Object>> toolCalls =
+                agentReply != null ? agentReply.toolCalls() : List.of();
+
+        if (agentReply != null) {
             log.info("User {} → Tier-1 (Python RAG) responded", user.getId());
         }
 
@@ -106,6 +112,8 @@ public class ChatService {
         return ChatResponse.builder()
                 .reply(reply)
                 .timestamp(LocalDateTime.now().toString())
+                .sources(sources)
+                .toolCalls(toolCalls)
                 .build();
     }
 
@@ -128,7 +136,7 @@ public class ChatService {
     // ── 3-Tier fallback ────────────────────────────────────────────
 
     /** Tier 1: Python Agent with RAG tool calling. */
-    private String tryPythonAgent(
+    private AgentReply tryPythonAgent(
             String userMessage,
             List<Map<String, String>> history,
             String wellnessContext) {
@@ -150,7 +158,15 @@ public class ChatService {
                     .body(Map.class);
 
             if (response != null && Boolean.TRUE.equals(response.get("success"))) {
-                return (String) response.get("answer");
+                Object answer = response.get("answer");
+                if (answer == null || answer.toString().isBlank()) {
+                    log.warn("Python agent returned an empty answer");
+                    return null;
+                }
+                return new AgentReply(
+                        answer.toString(),
+                        mapSources(response.get("sources")),
+                        mapToolCalls(response.get("tool_calls")));
             }
             log.warn("Python agent returned unsuccessful response: {}", response);
             return null;
@@ -223,5 +239,71 @@ public class ChatService {
 
     private static String truncate(String s, int max) {
         return s.length() <= max ? s : s.substring(0, max) + "...";
+    }
+
+    /**
+     * Converts the Python agent's snake_case source payload into the public
+     * Spring API's camelCase DTO contract.
+     *
+     * @author ZHAO LEI
+     */
+    private List<SourceInfo> mapSources(Object rawSources) {
+        if (!(rawSources instanceof List<?> sourceList)) {
+            return List.of();
+        }
+
+        List<SourceInfo> sources = new ArrayList<>();
+        for (Object item : sourceList) {
+            if (!(item instanceof Map<?, ?> source)) {
+                continue;
+            }
+            Object rank = source.get("rank");
+            Object score = source.get("score");
+            sources.add(SourceInfo.builder()
+                    .rank(rank instanceof Number number ? number.intValue() : 0)
+                    .title(stringValue(source.get("title")))
+                    .section(stringValue(source.get("section")))
+                    .sourceUrl(stringValue(source.get("source_url")))
+                    .score(score instanceof Number number ? number.doubleValue() : 0.0)
+                    .build());
+        }
+        return sources;
+    }
+
+    /**
+     * Copies the Python tool trace into JSON-safe maps without exposing raw
+     * wildcard map types to the response DTO.
+     *
+     * @author ZHAO LEI
+     */
+    private List<Map<String, Object>> mapToolCalls(Object rawToolCalls) {
+        if (!(rawToolCalls instanceof List<?> toolList)) {
+            return List.of();
+        }
+
+        List<Map<String, Object>> toolCalls = new ArrayList<>();
+        for (Object item : toolList) {
+            if (!(item instanceof Map<?, ?> tool)) {
+                continue;
+            }
+            Map<String, Object> mapped = new java.util.LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : tool.entrySet()) {
+                if (entry.getKey() != null) {
+                    mapped.put(entry.getKey().toString(), entry.getValue());
+                }
+            }
+            toolCalls.add(mapped);
+        }
+        return toolCalls;
+    }
+
+    private static String stringValue(Object value) {
+        return value == null ? "" : value.toString();
+    }
+
+    private record AgentReply(
+            String reply,
+            List<SourceInfo> sources,
+            List<Map<String, Object>> toolCalls) {
     }
 }

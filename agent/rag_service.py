@@ -6,6 +6,8 @@ Design goals:
 - cache embeddings locally for fast repeated queries
 - use chunk-level retrieval with source metadata for citations
 - fall back safely when required keys are missing
+
+Author: ZHAO LEI
 """
 
 from __future__ import annotations
@@ -137,7 +139,7 @@ class RagConfig:
     deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     doubao_base_url: str = os.getenv("DOUBAO_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3")
     doubao_api_key: str = os.getenv("DOUBAO_API_KEY", "")
-    doubao_model: str = os.getenv("DOUBAO_EMBED_MODEL", "doubao-embedding-vision-251215")
+    doubao_model: str = os.getenv("DOUBAO_EMBED_MODEL", "doubao-embedding-text-240715")
     embedding_batch_delay: float = float(os.getenv("RAG_EMBED_BATCH_DELAY", "0.5"))
     embedding_max_retries: int = int(os.getenv("RAG_EMBED_MAX_RETRIES", "5"))
     top_k: int = int(os.getenv("RAG_TOP_K", "5"))

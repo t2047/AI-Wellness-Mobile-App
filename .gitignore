@@ -4,6 +4,7 @@ backend/.mvn/
 backend/data/
 *.jar
 *.war
+!android/gradle/wrapper/gradle-wrapper.jar
 
 # Gradle
 android/.gradle/
@@ -67,4 +68,3 @@ agent/.venv/
 .env
 .env.*
 !.env.example
-

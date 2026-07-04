@@ -23,10 +23,16 @@ Never commit `.env` or paste real keys into shared docs/code.
 
 ```env
 AI_PROVIDER=openai
-OPENAI_API_KEY=
-OPENAI_CHAT_URL=https://www.packyapi.com/v1/chat/completions
-OPENAI_MODEL=gpt-5.5
+DASHSCOPE_API_KEY=
+OPENAI_CHAT_URL=https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+OPENAI_MODEL=qwen3.7-plus
+MYSQL_USER=root
+MYSQL_PASSWORD=
 ```
+
+For a dedicated Alibaba Cloud Model Studio deployment, replace
+`OPENAI_CHAT_URL` with the full Chat Completions URL shown in its API example
+(the configured `base_url` plus `/chat/completions`). Do not commit `.env`.
 
 ### 2. Start the Python Agent (RAG + AI Chat)
 
@@ -77,7 +83,7 @@ Open `android/` in Android Studio, sync Gradle, and run on emulator.
 - **Backend:** Spring Boot 3.2, Spring Security, JPA
 - **Database:** MySQL 8.0 / H2 (dev)
 - **Auth:** JWT (jjwt)
-- **AI:** OpenAI-compatible GPT fallback, optional DeepSeek + Doubao RAG (Python agent)
+- **AI:** OpenAI-compatible chat provider (including DashScope/Qwen), optional DeepSeek + Doubao RAG
 
 ## Documentation
 

@@ -12,13 +12,18 @@ Required or commonly used variables:
 MYSQL_PASSWORD=
 AI_PROVIDER=openai
 OPENAI_API_KEY=
+DASHSCOPE_API_KEY=
 OPENAI_CHAT_URL=
 OPENAI_MODEL=
 DOUBAO_API_KEY=
 DEEPSEEK_API_KEY=
 ```
 
-`AI_PROVIDER=openai` uses an OpenAI-compatible chat endpoint, such as a PackyAPI-compatible URL, for direct chatbot fallback. `AI_PROVIDER=deepseek` uses the DeepSeek chat configuration. Keep the Doubao variables because the original RAG embedding interface is still part of the project.
+`AI_PROVIDER=openai` uses an OpenAI-compatible chat endpoint, including
+DashScope/Qwen. Set either `OPENAI_API_KEY` or `DASHSCOPE_API_KEY`.
+`AI_PROVIDER=deepseek` uses the DeepSeek chat configuration. Keep the Doubao
+variables because the original RAG embedding interface is still part of the
+project.
 
 ## Start the Python Agent
 
@@ -39,7 +44,7 @@ If `DOUBAO_API_KEY` is not configured, the agent should still start. The Doubao/
 From the project root:
 
 ```bash
-.\mvn-local.cmd -f backend\pom.xml spring-boot:run -Dspring-boot.run.profiles=CA
+mvn -f backend/pom.xml spring-boot:run -Dspring-boot.run.profiles=CA
 ```
 
 The CA profile uses a local H2 file database under `backend/data/`. This folder is ignored by Git and should not be staged.
@@ -55,8 +60,8 @@ curl http://localhost:8080/api/health
 Make sure MySQL is running and that the configured user can create or access `wellness_db`.
 
 ```bash
-set MYSQL_PASSWORD=your-local-password
-.\mvn-local.cmd -f backend\pom.xml spring-boot:run -Dspring-boot.run.profiles=mysql
+export MYSQL_PASSWORD=your-local-password
+mvn -f backend/pom.xml spring-boot:run -Dspring-boot.run.profiles=mysql
 ```
 
 If the MySQL profile fails with authentication or connection errors, check:

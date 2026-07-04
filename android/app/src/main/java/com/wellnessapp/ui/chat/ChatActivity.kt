@@ -1,20 +1,25 @@
 package com.wellnessapp.ui.chat
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.inputmethod.EditorInfo
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.wellnessapp.data.api.RetrofitClient
 import com.wellnessapp.data.model.ChatRequest
 import com.wellnessapp.databinding.ActivityChatBinding
+import com.wellnessapp.ui.login.LoginActivity
+import com.wellnessapp.util.TokenManager
 import kotlinx.coroutines.launch
 
 /**
  * Chat screen — users can chat with WellBot, the wellness AI assistant.
  *
  * @author WellnessApp Team
+ * @author ZHAO LEI
  */
 class ChatActivity : AppCompatActivity() {
 
@@ -62,10 +67,12 @@ class ChatActivity : AppCompatActivity() {
                     ChatRequest(message)
                 )
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val reply = response.body()!!.data!!.reply
-                    adapter.addMessage(ChatMessageItem.Bot(reply))
+                    val chatResponse = response.body()!!.data!!
+                    adapter.addMessage(ChatMessageItem.Bot(formatReply(chatResponse)))
                     binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
                     binding.tvEmpty.visibility = View.GONE
+                } else if (response.code() == 401 || response.code() == 403) {
+                    handleSessionExpired()
                 } else {
                     adapter.addMessage(
                         ChatMessageItem.Bot("Sorry, I couldn't process that. Please try again.")
@@ -87,13 +94,17 @@ class ChatActivity : AppCompatActivity() {
                 val response = RetrofitClient.apiService.getChatHistory()
                 if (response.isSuccessful && response.body()?.success == true) {
                     val history = response.body()!!.data ?: emptyList()
-                    history.forEach { msg ->
+                    history.asReversed().forEach { msg ->
                         adapter.addMessage(ChatMessageItem.User(msg.userMessage))
                         adapter.addMessage(ChatMessageItem.Bot(msg.botResponse))
                     }
                     if (history.isEmpty()) {
                         binding.tvEmpty.visibility = View.VISIBLE
+                    } else {
+                        binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
                     }
+                } else if (response.code() == 401 || response.code() == 403) {
+                    handleSessionExpired()
                 }
             } catch (_: Exception) {
                 binding.tvEmpty.visibility = View.VISIBLE
@@ -104,6 +115,41 @@ class ChatActivity : AppCompatActivity() {
     private fun showLoading(loading: Boolean) {
         binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
         binding.btnSend.isEnabled = !loading
+    }
+
+    /**
+     * Appends RAG citations returned by the backend to the visible answer.
+     *
+     * @author ZHAO LEI
+     */
+    private fun formatReply(response: com.wellnessapp.data.model.ChatResponse): String {
+        if (response.sources.isEmpty()) {
+            return response.reply
+        }
+        return buildString {
+            append(response.reply)
+            append("\n\nSources:")
+            response.sources.forEach { source ->
+                append("\n[${source.rank}] ${source.title} — ${source.section}")
+                if (source.sourceUrl.isNotBlank()) {
+                    append("\n${source.sourceUrl}")
+                }
+            }
+        }
+    }
+
+    /**
+     * Clears an expired local session and returns to login.
+     *
+     * @author ZHAO LEI
+     */
+    private fun handleSessionExpired() {
+        Toast.makeText(this, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
+        TokenManager.logout()
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }
 

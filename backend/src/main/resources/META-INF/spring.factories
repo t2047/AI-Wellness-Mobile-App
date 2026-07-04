@@ -1,0 +1,3 @@
+# Added by ZHAO LEI: register project-root .env loading before property binding.
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.wellnessapp.config.DotenvConfig

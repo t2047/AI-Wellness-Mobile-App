@@ -28,6 +28,8 @@ import io.github.cdimascio.dotenv.Dotenv;
  *   <li>{@code .env} in the project root (detected by walking up from cwd)</li>
  *   <li>If not found, skips silently (OS env vars or defaults take over)</li>
  * </ol>
+ *
+ * @author ZHAO LEI
  */
 public class DotenvConfig implements EnvironmentPostProcessor {
 

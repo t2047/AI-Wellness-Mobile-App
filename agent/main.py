@@ -15,6 +15,8 @@ API Endpoints:
 Usage:
     python main.py
     (Runs on http://localhost:5001 by default)
+
+Author: ZHAO LEI
 """
 
 import os
@@ -39,7 +41,12 @@ CORS(app)
 # Configuration
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8080")
 JWT_TOKEN = os.environ.get("AGENT_JWT_TOKEN", "")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY") or os.environ.get("GPT_API_KEY", "")
+# ZHAO LEI: DashScope uses the same OpenAI-compatible authentication flow.
+OPENAI_API_KEY = (
+    os.environ.get("OPENAI_API_KEY")
+    or os.environ.get("DASHSCOPE_API_KEY")
+    or os.environ.get("GPT_API_KEY", "")
+)
 OPENAI_CHAT_URL = os.environ.get("OPENAI_CHAT_URL", "https://api.openai.com/v1/chat/completions")
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
@@ -55,7 +62,9 @@ except Exception as exc:
 def direct_gpt_chat(message, history=None, system_prompt=None):
     """OpenAI-compatible direct chat fallback for CA testing without RAG embeddings."""
     if not OPENAI_API_KEY:
-        raise RuntimeError("OPENAI_API_KEY or GPT_API_KEY is not configured")
+        raise RuntimeError(
+            "OPENAI_API_KEY, DASHSCOPE_API_KEY, or GPT_API_KEY is not configured"
+        )
 
     messages = [{
         "role": "system",

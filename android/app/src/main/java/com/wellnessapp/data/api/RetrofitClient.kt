@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit
  * Singleton Retrofit client with JWT token interceptor.
  *
  * @author WellnessApp Team
+ * @author ZHAO LEI
  */
 object RetrofitClient {
 
@@ -36,8 +37,9 @@ object RetrofitClient {
     }
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
+        // ZHAO LEI: BASIC avoids logging passwords, health data, chat content, and JWT bodies.
         level = if (BuildConfig.DEBUG)
-            HttpLoggingInterceptor.Level.BODY
+            HttpLoggingInterceptor.Level.BASIC
         else
             HttpLoggingInterceptor.Level.NONE
     }

@@ -7,6 +7,7 @@ import com.google.gson.annotations.SerializedName
  * Maps to backend DTOs.
  *
  * @author WellnessApp Team
+ * @author ZHAO LEI
  */
 
 // --- Auth ---
@@ -48,7 +49,17 @@ data class ChatRequest(
 
 data class ChatResponse(
     @SerializedName("reply") val reply: String,
-    @SerializedName("timestamp") val timestamp: String? = null
+    @SerializedName("timestamp") val timestamp: String? = null,
+    @SerializedName("sources") val sources: List<ChatSource> = emptyList(),
+    @SerializedName("toolCalls") val toolCalls: List<Map<String, Any?>> = emptyList()
+)
+
+data class ChatSource(
+    @SerializedName("rank") val rank: Int,
+    @SerializedName("title") val title: String,
+    @SerializedName("section") val section: String,
+    @SerializedName("sourceUrl") val sourceUrl: String,
+    @SerializedName("score") val score: Double
 )
 
 data class ChatMessage(
@@ -114,9 +125,9 @@ data class RagSource(
     @SerializedName("rank") val rank: Int,
     @SerializedName("score") val score: Double,
     @SerializedName("title") val title: String,
-    @SerializedName("section_title") val sectionTitle: String,
-    @SerializedName("chunk_id") val chunkId: Int,
-    @SerializedName("source_url") val sourceUrl: String,
+    @SerializedName("sectionTitle") val sectionTitle: String,
+    @SerializedName("chunkId") val chunkId: Int,
+    @SerializedName("sourceUrl") val sourceUrl: String,
     @SerializedName("snippet") val snippet: String
 )
 
