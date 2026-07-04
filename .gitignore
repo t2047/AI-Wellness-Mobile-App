@@ -1,6 +1,7 @@
 # Maven
 backend/target/
 backend/.mvn/
+.m2/
 *.jar
 *.war
 

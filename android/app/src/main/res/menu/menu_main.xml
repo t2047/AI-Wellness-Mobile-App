@@ -10,6 +10,10 @@
         android:title="@string/recommendations"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_analytics"
+        android:title="@string/analytics_dashboard"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_rag"
         android:title="Knowledge base"
         app:showAsAction="ifRoom" />

@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +32,14 @@ public class GlobalExceptionHandler {
         }
         return ResponseEntity.badRequest()
                 .body(ApiResponse.error("Validation failed", "VALIDATION_ERROR", errors));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex) {
+        String name = ex.getName() != null ? ex.getName() : "request parameter";
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error("Invalid value for " + name, "BAD_REQUEST"));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
