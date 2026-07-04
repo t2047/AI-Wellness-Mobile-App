@@ -104,17 +104,42 @@ class RecordFormActivity : AppCompatActivity() {
         val date = binding.etDate.text.toString().trim()
         val notes = binding.etNotes.text.toString().trim()
 
-        // Validate date
+        binding.sleepLayout.error = null
+        binding.durationLayout.error = null
+        binding.dateLayout.error = null
+
         if (date.isEmpty()) {
             binding.dateLayout.error = "Date is required"
             return
         }
-        binding.dateLayout.error = null
+        try {
+            LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE)
+        } catch (e: Exception) {
+            binding.dateLayout.error = "Use date format YYYY-MM-DD"
+            return
+        }
+
+        val sleepHours = sleepStr.toDoubleOrNull()
+        if (sleepStr.isNotEmpty() && (sleepHours == null || sleepHours < 0.0 || sleepHours > 24.0)) {
+            binding.sleepLayout.error = "Enter sleep hours from 0 to 24"
+            return
+        }
+
+        val durationMinutes = durationStr.toIntOrNull()
+        if (durationStr.isNotEmpty() && (durationMinutes == null || durationMinutes < 0 || durationMinutes > 1440)) {
+            binding.durationLayout.error = "Enter activity minutes from 0 to 1440"
+            return
+        }
+
+        if (sleepHours == null && activityName.isEmpty() && durationMinutes == null) {
+            binding.sleepLayout.error = "Add sleep or activity data"
+            return
+        }
 
         val record = WellnessRecord(
-            sleepHours = sleepStr.toDoubleOrNull(),
+            sleepHours = sleepHours,
             activityName = activityName.ifEmpty { null },
-            activityDurationMinutes = durationStr.toIntOrNull(),
+            activityDurationMinutes = durationMinutes,
             recordDate = date,
             notes = notes.ifEmpty { null }
         )

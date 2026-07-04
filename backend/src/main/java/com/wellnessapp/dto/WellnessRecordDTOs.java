@@ -4,6 +4,7 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +34,8 @@ public class WellnessRecordDTOs {
         private Integer activityDurationMinutes;
 
         @NotBlank(message = "Record date is required")
+        @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}",
+                message = "Record date must use YYYY-MM-DD format")
         private String recordDate;  // Format: YYYY-MM-DD
 
         @Size(max = 500, message = "Notes must be at most 500 characters")

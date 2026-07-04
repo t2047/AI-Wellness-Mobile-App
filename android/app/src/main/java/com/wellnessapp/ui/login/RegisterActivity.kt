@@ -1,5 +1,6 @@
 package com.wellnessapp.ui.login
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -8,6 +9,7 @@ import androidx.lifecycle.lifecycleScope
 import com.wellnessapp.data.api.RetrofitClient
 import com.wellnessapp.data.model.RegisterRequest
 import com.wellnessapp.databinding.ActivityRegisterBinding
+import com.wellnessapp.ui.health.HealthRecordActivity
 import com.wellnessapp.util.TokenManager
 import kotlinx.coroutines.launch
 
@@ -73,7 +75,7 @@ class RegisterActivity : AppCompatActivity() {
                         "Account created!",
                         Toast.LENGTH_SHORT
                     ).show()
-                    finish() // Return to login which will auto-redirect
+                    navigateToMain()
                 } else {
                     val errorMsg = response.body()?.message
                         ?: "Registration failed"
@@ -95,5 +97,12 @@ class RegisterActivity : AppCompatActivity() {
     private fun showError(message: String) {
         binding.tvError.text = message
         binding.tvError.visibility = View.VISIBLE
+    }
+
+    private fun navigateToMain() {
+        val intent = Intent(this, HealthRecordActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }

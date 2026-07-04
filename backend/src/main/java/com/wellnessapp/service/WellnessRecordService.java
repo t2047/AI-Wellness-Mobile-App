@@ -8,6 +8,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
@@ -55,7 +56,7 @@ public class WellnessRecordService {
                 .sleepHours(request.getSleepHours())
                 .activityName(request.getActivityName())
                 .activityDurationMinutes(request.getActivityDurationMinutes())
-                .recordDate(LocalDate.parse(request.getRecordDate()))
+                .recordDate(parseRecordDate(request.getRecordDate()))
                 .notes(request.getNotes())
                 .build();
 
@@ -72,7 +73,7 @@ public class WellnessRecordService {
         record.setSleepHours(request.getSleepHours());
         record.setActivityName(request.getActivityName());
         record.setActivityDurationMinutes(request.getActivityDurationMinutes());
-        record.setRecordDate(LocalDate.parse(request.getRecordDate()));
+        record.setRecordDate(parseRecordDate(request.getRecordDate()));
         record.setNotes(request.getNotes());
 
         record = recordRepository.save(record);
@@ -114,5 +115,13 @@ public class WellnessRecordService {
                 .createdAt(record.getCreatedAt() != null ? record.getCreatedAt().toString() : null)
                 .updatedAt(record.getUpdatedAt() != null ? record.getUpdatedAt().toString() : null)
                 .build();
+    }
+
+    private LocalDate parseRecordDate(String recordDate) {
+        try {
+            return LocalDate.parse(recordDate);
+        } catch (DateTimeParseException ex) {
+            throw new IllegalArgumentException("Record date must be a valid date in YYYY-MM-DD format");
+        }
     }
 }

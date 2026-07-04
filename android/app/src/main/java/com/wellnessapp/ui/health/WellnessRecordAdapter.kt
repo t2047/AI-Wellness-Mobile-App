@@ -38,13 +38,13 @@ class WellnessRecordAdapter(
 
             val sleepText = record.sleepHours?.let {
                 "Sleep: ${it}h"
-            } ?: "Sleep: —"
+            } ?: "Sleep: Not logged"
             binding.tvSleep.text = sleepText
 
             val activityText = record.activityName?.let { name ->
                 val duration = record.activityDurationMinutes?.let { " (${it}min)" } ?: ""
                 "$name$duration"
-            } ?: "Activity: —"
+            } ?: "Activity: Not logged"
             binding.tvActivity.text = activityText
 
             binding.tvNotes.text = record.notes ?: ""
