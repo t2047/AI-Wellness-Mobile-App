@@ -60,6 +60,13 @@ interface ApiService {
     @GET("api/weekly-summaries")
     suspend fun getWeeklySummaries(): Response<ApiResponse<List<WeeklySummary>>>
 
+    // --- Analytics ---
+
+    @GET("api/analytics/dashboard")
+    suspend fun getAnalyticsDashboard(
+        @Query("days") days: Int = 30
+    ): Response<ApiResponse<AnalyticsResponse>>
+
     // --- RAG (Drug Knowledge) ---
 
     @GET("api/rag/status")

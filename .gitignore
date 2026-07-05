@@ -2,6 +2,7 @@
 backend/target/
 backend/.mvn/
 backend/data/
+.m2/
 *.jar
 *.war
 !android/gradle/wrapper/gradle-wrapper.jar

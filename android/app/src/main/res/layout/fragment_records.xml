@@ -6,22 +6,17 @@
     android:background="@color/background"
     android:orientation="vertical">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/primary"
-        android:theme="@style/ThemeOverlay.MaterialComponents.Dark"
-        app:title="@string/health_records"
-        app:menu="@menu/menu_main" />
-
     <TextView
-        android:id="@+id/tvWelcome"
+        android:id="@+id/tvRecordsSubtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:textSize="16sp"
-        android:textColor="@color/textSecondary" />
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="12dp"
+        android:text="Manage your daily wellness records"
+        android:textColor="@color/textSecondary"
+        android:textSize="14sp" />
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -47,20 +42,20 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:text="@string/no_data"
-            android:visibility="gone"
+            android:textColor="@color/textSecondary"
             android:textSize="16sp"
-            android:textColor="@color/textSecondary" />
+            android:visibility="gone" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabAdd"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
             android:layout_gravity="end|bottom"
+            android:layout_margin="16dp"
             android:contentDescription="@string/add_record"
             android:src="@android:drawable/ic_input_add"
-            app:tint="@color/onPrimary"
-            app:backgroundTint="@color/primary" />
+            app:backgroundTint="@color/primary"
+            app:tint="@color/onPrimary" />
 
     </FrameLayout>
 

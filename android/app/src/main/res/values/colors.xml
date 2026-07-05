@@ -3,6 +3,13 @@
     <color name="primary">#4CAF50</color>
     <color name="primaryDark">#388E3C</color>
     <color name="accent">#FF9800</color>
+    <color name="sleepPurple">#6C63FF</color>
+    <color name="sleepPurpleLight">#E8E7FF</color>
+    <color name="successLight">#EAF6EA</color>
+    <color name="warningLight">#FFF3E0</color>
+    <color name="warningText">#F57C00</color>
+    <color name="infoLight">#E3F2FD</color>
+    <color name="infoText">#1976D2</color>
     <color name="background">#FAFAFA</color>
     <color name="surface">#FFFFFF</color>
     <color name="error">#F44336</color>

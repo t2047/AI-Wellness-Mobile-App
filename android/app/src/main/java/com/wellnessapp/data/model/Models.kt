@@ -94,6 +94,68 @@ data class WeeklySummary(
     @SerializedName("generatedAt") val generatedAt: String? = null
 )
 
+// --- Analytics ---
+
+/**
+ * Analytics dashboard response from the backend.
+ *
+ * @author Xuhan Zhang
+ */
+data class AnalyticsResponse(
+    @SerializedName("summary") val summary: AnalyticsSummary? = null,
+    @SerializedName("dailyMetrics") val dailyMetrics: List<AnalyticsDailyMetric> = emptyList(),
+    @SerializedName("activityBreakdown") val activityBreakdown: List<AnalyticsActivityBreakdown> = emptyList()
+)
+
+/**
+ * Summary metrics displayed at the top of the analytics dashboard.
+ *
+ * @author Xuhan Zhang
+ */
+data class AnalyticsSummary(
+    @SerializedName("startDate") val startDate: String? = null,
+    @SerializedName("endDate") val endDate: String? = null,
+    @SerializedName("days") val days: Int = 30,
+    @SerializedName("totalRecords") val totalRecords: Long = 0,
+    @SerializedName("recordedDays") val recordedDays: Long = 0,
+    @SerializedName("recordCompletionRate") val recordCompletionRate: Double = 0.0,
+    @SerializedName("currentStreakDays") val currentStreakDays: Int = 0,
+    @SerializedName("latestRecordDate") val latestRecordDate: String? = null,
+    @SerializedName("averageSleepHours") val averageSleepHours: Double? = null,
+    @SerializedName("minSleepHours") val minSleepHours: Double? = null,
+    @SerializedName("maxSleepHours") val maxSleepHours: Double? = null,
+    @SerializedName("totalActivityMinutes") val totalActivityMinutes: Int = 0,
+    @SerializedName("averageActivityMinutes") val averageActivityMinutes: Double? = null,
+    @SerializedName("topActivityName") val topActivityName: String? = null,
+    @SerializedName("unreadRecommendations") val unreadRecommendations: Long = 0,
+    @SerializedName("totalRecommendations") val totalRecommendations: Long = 0,
+    @SerializedName("chatMessageCount") val chatMessageCount: Long = 0
+)
+
+/**
+ * Daily analytics point for chart-ready wellness data.
+ *
+ * @author Xuhan Zhang
+ */
+data class AnalyticsDailyMetric(
+    @SerializedName("date") val date: String,
+    @SerializedName("averageSleepHours") val averageSleepHours: Double? = null,
+    @SerializedName("totalActivityMinutes") val totalActivityMinutes: Int = 0,
+    @SerializedName("recordCount") val recordCount: Long = 0,
+    @SerializedName("hasRecord") val hasRecord: Boolean = false
+)
+
+/**
+ * Exercise/activity distribution row for analytics summaries.
+ *
+ * @author Xuhan Zhang
+ */
+data class AnalyticsActivityBreakdown(
+    @SerializedName("activityName") val activityName: String,
+    @SerializedName("totalMinutes") val totalMinutes: Int = 0,
+    @SerializedName("recordCount") val recordCount: Long = 0
+)
+
 // --- Common API Response Wrapper ---
 
 data class ApiResponse<T>(

@@ -274,7 +274,66 @@ GET /api/recommendations
 
 ---
 
-## 5. Error Responses
+## 5. Analytics Dashboard
+
+Requires `Authorization: Bearer <token>`.
+
+### 5.1 Get Dashboard Metrics
+
+```
+GET /api/analytics/dashboard?days=30
+```
+
+`days` is optional, defaults to `30`, and must be between `1` and `365`.
+
+**Response (200 OK):**
+```json
+{
+    "success": true,
+    "message": null,
+    "data": {
+        "summary": {
+            "startDate": "2026-06-04",
+            "endDate": "2026-07-03",
+            "days": 30,
+            "totalRecords": 12,
+            "recordedDays": 10,
+            "recordCompletionRate": 33.3,
+            "currentStreakDays": 4,
+            "latestRecordDate": "2026-07-03",
+            "averageSleepHours": 7.2,
+            "minSleepHours": 5.5,
+            "maxSleepHours": 8.5,
+            "totalActivityMinutes": 360,
+            "averageActivityMinutes": 30.0,
+            "topActivityName": "Running",
+            "unreadRecommendations": 2,
+            "totalRecommendations": 5,
+            "chatMessageCount": 8
+        },
+        "dailyMetrics": [
+            {
+                "date": "2026-07-03",
+                "averageSleepHours": 7.5,
+                "totalActivityMinutes": 30,
+                "recordCount": 1,
+                "hasRecord": true
+            }
+        ],
+        "activityBreakdown": [
+            {
+                "activityName": "Running",
+                "totalMinutes": 180,
+                "recordCount": 4
+            }
+        ]
+    }
+}
+```
+
+---
+
+## 6. Error Responses
 
 All errors follow this format:
 ```json
