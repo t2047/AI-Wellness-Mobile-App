@@ -7,6 +7,7 @@ import com.wellnessapp.util.TokenManager
  * Application class for the Wellness App.
  *
  * @author WellnessApp Team
+ * @author ZHAO LEI
  */
 class WellnessApplication : Application() {
 
@@ -18,6 +19,8 @@ class WellnessApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        TokenManager.restoreToken()
+        // ZHAO LEI: every new app process starts logged out. A session is
+        // established only after the user explicitly submits the login form.
+        TokenManager.logout()
     }
 }

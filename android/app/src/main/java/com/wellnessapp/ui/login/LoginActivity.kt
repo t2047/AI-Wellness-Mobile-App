@@ -1,10 +1,12 @@
 package com.wellnessapp.ui.login
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.wellnessapp.data.api.RetrofitClient
@@ -19,10 +21,29 @@ import kotlinx.coroutines.launch
  * and redirects to main screen on success.
  *
  * @author WellnessApp Team
+ * @author ZHAO LEI
  */
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
+    private val registerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != Activity.RESULT_OK) {
+                return@registerForActivityResult
+            }
+            val username = result.data
+                ?.getStringExtra(RegisterActivity.EXTRA_REGISTERED_USERNAME)
+                .orEmpty()
+            if (username.isNotBlank()) {
+                binding.etUsername.setText(username)
+                binding.etPassword.requestFocus()
+            }
+            Toast.makeText(
+                this,
+                getString(com.wellnessapp.R.string.account_created_sign_in),
+                Toast.LENGTH_LONG
+            ).show()
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,12 +51,6 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
         Log.d(TAG, "LoginActivity setContentView done")
-
-        TokenManager.restoreToken()
-        if (TokenManager.isLoggedIn()) {
-            navigateToMain()
-            return
-        }
 
         binding.btnLogin.setOnClickListener { performLogin() }
         binding.tvRegisterLink.setOnClickListener { navigateToRegister() }
@@ -85,8 +100,13 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Opens registration and waits for the new username without authenticating it.
+     *
+     * @author ZHAO LEI
+     */
     private fun navigateToRegister() {
-        startActivity(Intent(this, RegisterActivity::class.java))
+        registerLauncher.launch(Intent(this, RegisterActivity::class.java))
     }
 
     private fun navigateToMain() {

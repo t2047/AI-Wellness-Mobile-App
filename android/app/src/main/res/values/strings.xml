@@ -42,4 +42,7 @@
     <string name="voice_not_recognized">No speech was recognized</string>
     <!-- Author: ZHAO LEI -->
     <string name="weekly_health_summaries">Weekly Health Summaries</string>
+    <string name="not_logged_in">Not logged in</string>
+    <string name="sign_in_to_continue">Sign in to continue</string>
+    <string name="account_created_sign_in">Account created. Please enter your password to sign in.</string>
 </resources>
