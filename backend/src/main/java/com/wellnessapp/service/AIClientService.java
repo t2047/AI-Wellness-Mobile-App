@@ -88,8 +88,34 @@ public class AIClientService {
 
     /** Multi-turn chat with configurable max tokens. */
     public String chat(List<Map<String, String>> messages, int maxTokens) {
+        return chatWithConfig(apiKey, chatUrl, model, provider, messages, maxTokens);
+    }
+
+    /**
+     * Chat using user-specific model configuration.
+     * Allows users to override the global AI provider with their own API key and endpoint.
+     */
+    public String chatWithUserConfig(
+            String userApiKey, String userBaseUrl, String userModel,
+            List<Map<String, String>> messages, int maxTokens) {
+        if (userApiKey == null || userApiKey.isBlank()) {
+            throw new AiServiceException("User API key is not configured");
+        }
+        if (userBaseUrl == null || userBaseUrl.isBlank()) {
+            throw new AiServiceException("User base URL is not configured");
+        }
+        String effectiveModel = (userModel != null && !userModel.isBlank()) ? userModel : "gpt-4o-mini";
+        return chatWithConfig(userApiKey, userBaseUrl, effectiveModel, "custom", messages, maxTokens);
+    }
+
+    /**
+     * Core chat implementation — works with any OpenAI-compatible API.
+     */
+    private String chatWithConfig(
+            String apiKey, String chatUrl, String model, String providerLabel,
+            List<Map<String, String>> messages, int maxTokens) {
         if (apiKey == null || apiKey.isBlank()) {
-            throw new AiServiceException(provider + " API key is not configured");
+            throw new AiServiceException(providerLabel + " API key is not configured");
         }
 
         Map<String, Object> body = new LinkedHashMap<>();
@@ -97,9 +123,7 @@ public class AIClientService {
         body.put("messages", messages);
         body.put("max_tokens", maxTokens);
         body.put("stream", false);
-        if ("deepseek".equals(provider)) {
-            body.put("temperature", 0.7);
-        }
+        body.put("temperature", 0.7);
 
         try {
             @SuppressWarnings("unchecked")
@@ -110,30 +134,30 @@ public class AIClientService {
                     .retrieve()
                     .body(Map.class);
 
-            return extractReply(response);
+            return extractReply(response, providerLabel);
         } catch (Exception e) {
-            log.error("{} API call failed: {}", provider, e.getMessage());
-            throw new AiServiceException(provider + " API unavailable: " + e.getMessage(), e);
+            log.error("{} API call failed: {}", providerLabel, e.getMessage());
+            throw new AiServiceException(providerLabel + " API unavailable: " + e.getMessage(), e);
         }
     }
 
     // ── Internal helpers ───────────────────────────────────────────
 
     @SuppressWarnings("unchecked")
-    private String extractReply(Map<String, Object> response) {
+    private String extractReply(Map<String, Object> response, String providerLabel) {
         if (response == null) {
-            throw new AiServiceException(provider + " returned null response");
+            throw new AiServiceException(providerLabel + " returned null response");
         }
 
         List<Map<String, Object>> choices =
                 (List<Map<String, Object>>) response.get("choices");
         if (choices == null || choices.isEmpty()) {
-            throw new AiServiceException(provider + " response did not contain choices");
+            throw new AiServiceException(providerLabel + " response did not contain choices");
         }
 
         Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
         if (message == null || message.get("content") == null) {
-            throw new AiServiceException(provider + " response did not contain message content");
+            throw new AiServiceException(providerLabel + " response did not contain message content");
         }
 
         return message.get("content").toString().trim();

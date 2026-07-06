@@ -9,7 +9,7 @@ import androidx.lifecycle.lifecycleScope
 import com.wellnessapp.data.api.RetrofitClient
 import com.wellnessapp.data.model.RegisterRequest
 import com.wellnessapp.databinding.ActivityRegisterBinding
-import com.wellnessapp.ui.health.HealthRecordActivity
+import com.wellnessapp.ui.main.MainActivity
 import com.wellnessapp.util.TokenManager
 import kotlinx.coroutines.launch
 
@@ -102,7 +102,7 @@ class RegisterActivity : AppCompatActivity() {
      * @author ZHAO LEI
      */
     private fun navigateToMain() {
-        val intent = Intent(this, HealthRecordActivity::class.java)
+        val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
@@ -111,12 +111,5 @@ class RegisterActivity : AppCompatActivity() {
     private fun showError(message: String) {
         binding.tvError.text = message
         binding.tvError.visibility = View.VISIBLE
-    }
-
-    private fun navigateToMain() {
-        val intent = Intent(this, HealthRecordActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
     }
 }

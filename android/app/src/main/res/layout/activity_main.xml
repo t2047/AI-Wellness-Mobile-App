@@ -29,6 +29,18 @@
             android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSettings"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/nav_settings"
+            android:padding="0dp"
+            app:icon="@drawable/ic_settings"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconTint="@color/primary" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogout"
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"

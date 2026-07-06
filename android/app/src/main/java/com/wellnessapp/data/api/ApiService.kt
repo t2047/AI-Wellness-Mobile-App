@@ -80,4 +80,21 @@ interface ApiService {
 
     @POST("api/rag/ask")
     suspend fun askRag(@Body request: RagAskRequest): Response<ApiResponse<RagAskResponse>>
+
+    // --- Model Configuration ---
+
+    @GET("api/model-config")
+    suspend fun getModelConfigs(): Response<ApiResponse<List<ModelConfigResponse>>>
+
+    @GET("api/model-config/active")
+    suspend fun getActiveModelConfig(): Response<ApiResponse<ModelConfigResponse>>
+
+    @POST("api/model-config")
+    suspend fun saveModelConfig(@Body request: ModelConfigRequest): Response<ApiResponse<ModelConfigResponse>>
+
+    @DELETE("api/model-config/{id}")
+    suspend fun deleteModelConfig(@Path("id") id: Long): Response<ApiResponse<Unit>>
+
+    @PUT("api/model-config/{id}/activate")
+    suspend fun activateModelConfig(@Path("id") id: Long): Response<ApiResponse<ModelConfigResponse>>
 }

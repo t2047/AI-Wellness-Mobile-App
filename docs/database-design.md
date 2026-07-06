@@ -30,14 +30,43 @@
        │              │    ┌────────────────────────┐
        │              │    │   recommendations       │
        │              │    ├────────────────────────┤
-       │              └───>│ id (PK)                 │
-       │                   │ user_id (FK → users.id) │
-       │                   │ recommendation_text     │
-       │                   │ analysis_summary        │
-       │                   │ generated_at            │
-       │                   │ is_read                 │
-       │                   └────────────────────────┘
-       v
+       │              ├───>│ id (PK)                 │
+       │              │    │ user_id (FK → users.id) │
+       │              │    │ recommendation_text     │
+       │              │    │ analysis_summary        │
+       │              │    │ generated_at            │
+       │              │    │ is_read                 │
+       │              │    └────────────────────────┘
+       │              │
+       │              │    ┌────────────────────────┐
+       │              │    │   weekly_summaries      │
+       │              │    ├────────────────────────┤
+       │              ├───>│ id (PK)                 │
+       │              │    │ user_id (FK → users.id) │
+       │              │    │ week_start_date         │
+       │              │    │ week_end_date           │
+       │              │    │ average_sleep_hours     │
+       │              │    │ total_activity_minutes  │
+       │              │    │ active_days             │
+       │              │    │ record_count            │
+       │              │    │ summary_text            │
+       │              │    │ recommendation_text     │
+       │              │    │ generated_at            │
+       │              │    └────────────────────────┘
+       │              │
+       │              │    ┌──────────────────────────┐
+       │              │    │    user_model_configs     │
+       │              │    ├──────────────────────────┤
+       │              └───>│ id (PK)                   │
+       │                   │ user_id (FK → users.id)   │
+       │                   │ provider_name             │
+       │                   │ base_url                  │
+       │                   │ api_key                   │
+       │                   │ model_name                │
+       │                   │ is_active                 │
+       │                   │ created_at                │
+       │                   │ updated_at                │
+       └─────────────────┘  └──────────────────────────┘
 ```
 
 ## Table Details
@@ -83,10 +112,39 @@
 | generated_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | |
 | is_read | BOOLEAN | DEFAULT FALSE | Read status |
 
+### weekly_summaries
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | BIGINT | PK, AUTO_INCREMENT | |
+| user_id | BIGINT | FK → users.id, NOT NULL | |
+| week_start_date | DATE | NOT NULL | |
+| week_end_date | DATE | NOT NULL | |
+| average_sleep_hours | DECIMAL(4,1) | | Average sleep in period |
+| total_activity_minutes | INT | DEFAULT 0 | |
+| active_days | INT | DEFAULT 0 | |
+| record_count | INT | DEFAULT 0 | |
+| summary_text | TEXT | | Generated weekly summary |
+| recommendation_text | TEXT | | Generated recommendation |
+| generated_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | |
+
+### user_model_configs
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | BIGINT | PK, AUTO_INCREMENT | |
+| user_id | BIGINT | FK → users.id, NOT NULL | Owner |
+| provider_name | VARCHAR(50) | NOT NULL | Provider identifier: `openai`, `deepseek`, `doubao`, `custom` |
+| base_url | VARCHAR(500) | NOT NULL | API endpoint base URL |
+| api_key | VARCHAR(500) | NOT NULL | Full API key (masked in API responses) |
+| model_name | VARCHAR(100) | NOT NULL | Model identifier |
+| is_active | BOOLEAN | DEFAULT TRUE | Whether this config is currently active |
+| created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | |
+| updated_at | TIMESTAMP | ON UPDATE CURRENT_TIMESTAMP | |
+
 ## Key Design Decisions
 
-1. **Cascade deletes**: Deleting a user cascades to their records, messages, and recommendations.
-2. **Indexes**: Added on `user_id` foreign keys and `record_date` for query performance.
+1. **Cascade deletes**: Deleting a user cascades to all child tables (records, messages, recommendations, summaries, model configs).
+2. **Indexes**: Added on `user_id` foreign keys and commonly queried columns (`record_date`, `generated_at`, `provider_name`).
 3. **DECIMAL(4,1)**: Sleep hours support values like 7.5 with one decimal place.
 4. **TEXT columns**: Notes, messages, and recommendations use TEXT for flexibility.
 5. **is_read flag**: Allows Android to show unread recommendation badges.
+6. **user_model_configs**: Stores per-user AI model settings. Only one config is active per user at a time. API key is returned masked in API responses (`sk-...xxxx`).

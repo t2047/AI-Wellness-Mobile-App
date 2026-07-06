@@ -19,6 +19,7 @@ import com.wellnessapp.dto.ChatDTOs.ChatRequest;
 import com.wellnessapp.dto.ChatDTOs.ChatResponse;
 import com.wellnessapp.entity.ChatMessage;
 import com.wellnessapp.entity.User;
+import com.wellnessapp.entity.UserModelConfig;
 import com.wellnessapp.repository.ChatMessageRepository;
 
 /**
@@ -45,6 +46,7 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final AIClientService aiClientService;
     private final WellnessInsightsService wellnessInsightsService;
+    private final UserModelConfigService userModelConfigService;
     private final RestClient restClient;
     private final String agentBaseUrl;
 
@@ -55,10 +57,12 @@ public class ChatService {
             ChatMessageRepository chatMessageRepository,
             AIClientService aiClientService,
             WellnessInsightsService wellnessInsightsService,
+            UserModelConfigService userModelConfigService,
             @Value("${agent.python.base-url:http://localhost:5001}") String agentBaseUrl) {
         this.chatMessageRepository = chatMessageRepository;
         this.aiClientService = aiClientService;
         this.wellnessInsightsService = wellnessInsightsService;
+        this.userModelConfigService = userModelConfigService;
         this.agentBaseUrl = agentBaseUrl;
         this.restClient = RestClient.builder()
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
@@ -90,9 +94,9 @@ public class ChatService {
         }
 
         if (reply == null) {
-            reply = tryDirectDeepSeek(userMessage, history, wellnessContext);
+            reply = tryDirectDeepSeek(user, userMessage, history, wellnessContext);
             if (reply != null) {
-                log.info("User {} → Tier-2 (Direct DeepSeek) responded", user.getId());
+                log.info("User {} → Tier-2 (Direct AI) responded", user.getId());
             }
         }
 
@@ -176,13 +180,13 @@ public class ChatService {
         }
     }
 
-    /** Tier 2: Direct DeepSeek call (no RAG). */
+    /** Tier 2: Direct AI call — uses user custom config if available, otherwise global. */
     private String tryDirectDeepSeek(
+            User user,
             String userMessage,
             List<Map<String, String>> history,
             String wellnessContext) {
         try {
-            // Build message list: system prompt + history + new user message
             List<Map<String, String>> messages = new ArrayList<>();
             messages.add(Map.of(
                     "role", "system",
@@ -190,9 +194,24 @@ public class ChatService {
             messages.addAll(history);
             messages.add(Map.of("role", "user", "content", userMessage));
 
+            // Check if user has a custom active model config
+            var userConfigEntity = userModelConfigService.getActiveConfigEntity(user);
+            if (userConfigEntity.isPresent()) {
+                UserModelConfig cfg = userConfigEntity.get();
+                log.info("User {} using custom model: provider={}, model={}",
+                        user.getId(), cfg.getProviderName(), cfg.getModelName());
+                try {
+                    return aiClientService.chatWithUserConfig(
+                            cfg.getApiKey(), cfg.getBaseUrl(), cfg.getModelName(),
+                            messages, 300);
+                } catch (Exception e) {
+                    log.warn("User custom config failed, falling back to global: {}", e.getMessage());
+                }
+            }
+
             return aiClientService.chat(messages);
         } catch (AIClientService.AiServiceException e) {
-            log.warn("Direct DeepSeek unavailable: {}", e.getMessage());
+            log.warn("Direct AI unavailable: {}", e.getMessage());
             return null;
         }
     }
