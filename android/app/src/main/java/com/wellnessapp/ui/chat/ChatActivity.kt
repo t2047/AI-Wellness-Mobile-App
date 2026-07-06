@@ -55,6 +55,15 @@ class ChatActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.toolbar.setNavigationOnClickListener { finish() }
+        binding.toolbar.inflateMenu(R.menu.menu_chat)
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            if (item.itemId == R.id.action_new_chat) {
+                startNewConversation()
+                true
+            } else {
+                false
+            }
+        }
 
         adapter = ChatMessageAdapter()
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -89,6 +98,12 @@ class ChatActivity : AppCompatActivity() {
         } catch (_: ActivityNotFoundException) {
             Toast.makeText(this, R.string.voice_unavailable, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun startNewConversation() {
+        adapter.clearMessages()
+        binding.tvEmpty.visibility = View.VISIBLE
+        Toast.makeText(this, R.string.new_conversation_started, Toast.LENGTH_SHORT).show()
     }
 
     private fun sendMessage() {
