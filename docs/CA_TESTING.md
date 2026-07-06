@@ -10,20 +10,14 @@ Required or commonly used variables:
 
 ```env
 MYSQL_PASSWORD=
-AI_PROVIDER=openai
-OPENAI_API_KEY=
-DASHSCOPE_API_KEY=
-OPENAI_CHAT_URL=
-OPENAI_MODEL=
-DOUBAO_API_KEY=
+AI_PROVIDER=deepseek
 DEEPSEEK_API_KEY=
+DOUBAO_API_KEY=
 ```
 
-`AI_PROVIDER=openai` uses an OpenAI-compatible chat endpoint, including
-DashScope/Qwen. Set either `OPENAI_API_KEY` or `DASHSCOPE_API_KEY`.
-`AI_PROVIDER=deepseek` uses the DeepSeek chat configuration. Keep the Doubao
-variables because the original RAG embedding interface is still part of the
-project.
+**Per-user config**: Users can also configure their own AI model keys via the Android
+app's **Settings** tab, without needing server `.env` changes. See
+[api-spec.md §7](api-spec.md#7-model-configuration-user-ai-settings).
 
 ## Start the Python Agent
 
@@ -101,7 +95,12 @@ Run these checks before submission:
 9. Ask the chatbot a personal wellness question, such as `How was my sleep this week?`.
 10. Check RAG status.
 11. Ask a RAG question.
-12. Log out and confirm the session is cleared.
+12. **Open Settings tab and configure a custom AI model**:
+    - Enter Provider (e.g. `deepseek`), Base URL, API Key, Model Name
+    - Tap Save Configuration
+    - Confirm the config appears in the saved list with an `● ACTIVE` badge
+13. Test chat with the custom config — send a wellness question.
+14. Log out and confirm the session is cleared.
 
 ## Submission Safety Checklist
 

@@ -95,6 +95,25 @@ CREATE TABLE IF NOT EXISTS weekly_summaries (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------------------------------
+-- Table: user_model_configs
+-- Description: Stores per-user AI model configuration (base URL, API key, model).
+-- ----------------------------------------------------
+CREATE TABLE IF NOT EXISTS user_model_configs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    provider_name VARCHAR(50) NOT NULL COMMENT 'openai, deepseek, doubao, custom',
+    base_url VARCHAR(500) NOT NULL COMMENT 'API endpoint base URL',
+    api_key VARCHAR(500) NOT NULL COMMENT 'Encrypted API key',
+    model_name VARCHAR(100) NOT NULL COMMENT 'Model identifier (e.g. gpt-4o-mini)',
+    is_active BOOLEAN DEFAULT TRUE COMMENT 'Whether this config is currently active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_model_config_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_model_config_user_id (user_id),
+    INDEX idx_model_config_provider (user_id, provider_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------------------------------
 -- Insert test user for development
 -- Password: Test1234! (BCrypt hashed)
 -- ----------------------------------------------------

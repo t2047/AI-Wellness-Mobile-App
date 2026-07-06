@@ -218,3 +218,24 @@ data class RagReindexStatusResponse(
     @SerializedName("startedAt") val startedAt: String? = null,
     @SerializedName("completedAt") val completedAt: String? = null
 )
+
+// --- Model Configuration ---
+
+data class ModelConfigRequest(
+    @SerializedName("providerName") val providerName: String,
+    @SerializedName("baseUrl") val baseUrl: String,
+    @SerializedName("apiKey") val apiKey: String,
+    @SerializedName("modelName") val modelName: String,
+    @SerializedName("isActive") val isActive: Boolean = true
+)
+
+data class ModelConfigResponse(
+    @SerializedName("id") val id: Long? = null,
+    @SerializedName("providerName") val providerName: String,
+    @SerializedName("baseUrl") val baseUrl: String,
+    @SerializedName("apiKeyMasked") val apiKeyMasked: String,
+    @SerializedName("modelName") val modelName: String,
+    @SerializedName("isActive") val isActive: Boolean = false,
+    @SerializedName("createdAt") val createdAt: String? = null,
+    @SerializedName("updatedAt") val updatedAt: String? = null
+)

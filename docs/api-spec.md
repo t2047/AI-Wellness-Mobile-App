@@ -1,8 +1,8 @@
 # Wellness App REST API Specification
 
 **Base URL:** `http://localhost:8080`
-**Version:** 1.0
-**Date:** 2026-06-25
+**Version:** 1.1
+**Date:** 2026-07-06
 
 ---
 
@@ -370,3 +370,139 @@ All errors follow this format:
 | `ACCESS_DENIED` | Record belongs to another user |
 | `AI_SERVICE_ERROR` | Chatbot/AI call failed |
 | `VALIDATION_ERROR` | Request field validation failed |
+| `CONFIG_NOT_FOUND` | User model config not found |
+| `CONFIG_NOT_OWNED` | Config belongs to a different user |
+| `CONFIG_INVALID` | User model config has invalid fields |
+
+---
+
+## 7. Model Configuration (User AI Settings)
+
+Users can configure their preferred AI model parameters (provider, base URL, API key, model name) via these endpoints. All endpoints require JWT authentication.
+
+The active config is used by `ChatService` Tier-2 fallback when the Python agent is unavailable.
+
+### 7.1 List All Configs
+
+```
+GET /api/model-config
+```
+
+**Response:**
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "providerName": "openai",
+            "baseUrl": "https://api.openai.com/v1",
+            "apiKeyMasked": "sk-...abcd",
+            "modelName": "gpt-4o-mini",
+            "isActive": true,
+            "createdAt": "2026-07-06T10:00:00",
+            "updatedAt": "2026-07-06T10:00:00"
+        }
+    ]
+}
+```
+
+> **Note**: `apiKeyMasked` shows only the first 4 and last 4 characters. The full key is never exposed in API responses.
+
+### 7.2 Get Active Config
+
+```
+GET /api/model-config/active
+```
+
+**Response (config exists):**
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "providerName": "openai",
+        "baseUrl": "https://api.openai.com/v1",
+        "apiKeyMasked": "sk-...abcd",
+        "modelName": "gpt-4o-mini",
+        "isActive": true,
+        "createdAt": "2026-07-06T10:00:00",
+        "updatedAt": "2026-07-06T10:00:00"
+    }
+}
+```
+
+**Response (no config):**
+```json
+{
+    "success": true,
+    "message": "No active config",
+    "data": null
+}
+```
+
+### 7.3 Save Config (Create or Update)
+
+```
+POST /api/model-config
+```
+
+**Request Body:**
+```json
+{
+    "providerName": "openai",
+    "baseUrl": "https://api.openai.com/v1",
+    "apiKey": "sk-your-actual-api-key",
+    "modelName": "gpt-4o-mini",
+    "isActive": true
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `providerName` | string | Yes | Provider identifier: `openai`, `deepseek`, `doubao`, or custom |
+| `baseUrl` | string | Yes | API endpoint base URL (e.g. `https://api.deepseek.com`) |
+| `apiKey` | string | Yes | Full API key (stored in DB, masked in responses) |
+| `modelName` | string | Yes | Model identifier (e.g. `deepseek-chat`, `gpt-4o-mini`) |
+| `isActive` | boolean | No | Set to `true` to immediately activate this config (default: `true`) |
+
+**Behavior**: If `isActive` is `true`, all other configs for this user are automatically deactivated. If a config with the same `providerName` already exists, it is updated; otherwise, a new config is created.
+
+### 7.4 Delete Config
+
+```
+DELETE /api/model-config/{id}
+```
+
+**Response:**
+```json
+{
+    "success": true,
+    "message": "Config deleted",
+    "data": null
+}
+```
+
+### 7.5 Activate Config
+
+```
+PUT /api/model-config/{id}/activate
+```
+
+Activates the specified config and deactivates all other configs for the same user.
+
+**Response:**
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "providerName": "deepseek",
+        "baseUrl": "https://api.deepseek.com",
+        "apiKeyMasked": "sk-...abcd",
+        "modelName": "deepseek-chat",
+        "isActive": true,
+        "updatedAt": "2026-07-06T10:00:00"
+    }
+}
+```

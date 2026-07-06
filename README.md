@@ -22,17 +22,16 @@ Copy `.env.example` to `.env` at the project root and fill in local API keys.
 Never commit `.env` or paste real keys into shared docs/code.
 
 ```env
-AI_PROVIDER=openai
-DASHSCOPE_API_KEY=
-OPENAI_CHAT_URL=https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
-OPENAI_MODEL=qwen3.7-plus
+AI_PROVIDER=deepseek
+DEEPSEEK_API_KEY=
+DOUBAO_API_KEY=
 MYSQL_USER=root
 MYSQL_PASSWORD=
 ```
 
-For a dedicated Alibaba Cloud Model Studio deployment, replace
-`OPENAI_CHAT_URL` with the full Chat Completions URL shown in its API example
-(the configured `base_url` plus `/chat/completions`). Do not commit `.env`.
+> **Note**: Users can also configure their own model keys via the Android app's
+> **Settings** tab, which saves per-user model configs to the database. See
+> [api-spec.md](docs/api-spec.md#7-model-configuration-user-ai-settings) for details.
 
 ### 2. Start the Python Agent (RAG + AI Chat)
 
@@ -66,24 +65,25 @@ Open `android/` in Android Studio, sync Gradle, and run on emulator.
 ┌─────────────┐     ┌──────────────┐     ┌──────────────────┐
 │  Android     │────▶│  Backend     │────▶│  Python Agent    │
 │  Kotlin App  │     │  :8080       │     │  :5001           │
-└─────────────┘     │  Spring Boot  │     │  Flask           │
-                    │               │     │  ├── /chat (RAG) │
-                    │  Chat: 3-tier │     │  ├── /rag/*      │
-                    │  fallback     │     │  └── /analyze    │
-                    │               │     └──────────────────┘
-                    │  ┌─────────┐  │
-                    │  │ DeepSeek│  │  ← direct fallback
-                    │  │ API     │  │
-                    │  └─────────┘  │
+│             │     │  Spring Boot  │     │  Flask           │
+│  5 tabs:    │     │              │     │  ├── /chat (RAG) │
+│  ─────────  │     │  Chat: 3-tier│     │  ├── /rag/*      │
+│  Dashboard  │     │  fallback:   │     │  └── /analyze    │
+│  Records    │     │  1. Python   │     └──────────────────┘
+│  Coach      │     │     Agent    │
+│  Chat       │     │  2. User     │     ┌──────────────────┐
+│  Knowledge  │     │     Config   │────▶│  User's own AI   │
+│  Settings───│────▶│  3. Global   │     │  (per-user keys) │
+└─────────────┘     │     .env     │     └──────────────────┘
                     └──────────────┘
 ```
 
 ## Tech Stack
-- **Android:** Kotlin, Retrofit, ViewModel, LiveData
-- **Backend:** Spring Boot 3.2, Spring Security, JPA
+- **Android:** Kotlin, Retrofit, ViewModel, LiveData, MPAndroidChart
+- **Backend:** Spring Boot 3.2, Spring Security, JPA, JWT (jjwt)
 - **Database:** MySQL 8.0 / H2 (dev)
-- **Auth:** JWT (jjwt)
-- **AI:** OpenAI-compatible chat provider (including DashScope/Qwen), optional DeepSeek + Doubao RAG
+- **AI:** DeepSeek (primary LLM), Doubao (embeddings), DashScope/OpenAI-compatible fallback
+- **RAG:** Document embedding with cosine similarity retrieval on MSD medical corpus
 
 ## Documentation
 
@@ -93,3 +93,5 @@ Open `android/` in Android Studio, sync Gradle, and run on emulator.
 - [API Specification](docs/api-spec.md)
 - [Database Design](docs/database-design.md)
 - [Development Prompts](docs/prompts.md)
+- [Android Updates & Bug Fixes](android/updates.md)
+- [Project Updates & Changelog](docs/updates.md)

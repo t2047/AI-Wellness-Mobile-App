@@ -32,12 +32,15 @@ Common keys:
 
 | Variable | Description |
 |----------|-------------|
-| `AI_PROVIDER` | `openai` for OpenAI-compatible GPT fallback, or `deepseek` for DeepSeek |
-| `OPENAI_API_KEY` | OpenAI-compatible GPT API key |
-| `OPENAI_CHAT_URL` | Chat completions endpoint, for example a PackyAPI-compatible URL |
-| `OPENAI_MODEL` | GPT model name used for direct chatbot fallback |
-| `DEEPSEEK_API_KEY` | Optional original DeepSeek LLM API key |
-| `DOUBAO_API_KEY` | Optional original Doubao embedding API key for full RAG indexing |
+| `AI_PROVIDER` | `deepseek` (default) for DeepSeek, or `openai` for OpenAI-compatible fallback |
+| `DEEPSEEK_API_KEY` | DeepSeek LLM API key for RAG answers & agent reasoning |
+| `DOUBAO_API_KEY` | Doubao embedding API key for full RAG indexing |
+| `OPENAI_API_KEY` | Optional OpenAI-compatible GPT fallback API key |
+| `DASHSCOPE_API_KEY` | Optional DashScope/Alibaba Cloud fallback API key |
+
+> **Per-user model config**: Users can also configure their own API keys, base URLs, and models
+> through the Android app's **Settings** tab. These are stored in `user_model_configs` table and
+> take priority over `.env` settings. See [api-spec.md](api-spec.md#7-model-configuration-user-ai-settings).
 
 The `.env` file is loaded by:
 - **Java Backend**: `DotenvConfig` (via `dotenv-java` `EnvironmentPostProcessor`) at startup
@@ -96,7 +99,9 @@ Client → POST /api/chat
           ├─ Tier 1: Python Agent /chat ─── DeepSeek + RAG (MSD Medical Knowledge Base)
           │   └─ 失败 → 走 Tier 2
           │
-          ├─ Tier 2: AIClientService 直连 OpenAI-compatible GPT or DeepSeek
+          ├─ Tier 2: 用户自定义配置？
+          │   ├── 有 → AIClientService 用用户的 apiKey/baseUrl/model 调用 AI
+          │   └── 无 → AIClientService 用全局 .env 配置调用 AI
           │   └─ 失败 → 走 Tier 3
           │
           └─ Tier 3: 静态 Fallback 消息
@@ -104,8 +109,9 @@ Client → POST /api/chat
 
 The chatbot intelligently degrades:
 1. **Best case**: RAG-augmented answers with medical citations from the MSD Manuals knowledge base (see [ATTRIBUTION.md](../ATTRIBUTION.md) for content licensing)
-2. **Degraded**: Direct OpenAI-compatible GPT/DeepSeek with conversation history but no RAG
-3. **Offline**: Simple static message when both services are unavailable
+2. **User config**: User's own AI provider via Settings tab (saved in `user_model_configs`)
+3. **Degraded**: Direct OpenAI-compatible GPT/DeepSeek with conversation history but no RAG
+4. **Offline**: Simple static message when all services are unavailable
 
 ### AI Component: Python Agent
 
@@ -134,18 +140,27 @@ backend/
 │   │   ├── WellnessRecordController.java # CRUD wellness records
 │   │   ├── ChatController.java           # Chat endpoints
 │   │   ├── RecommendationController.java # AI recommendations
-│   │   └── RagController.java            # RAG proxy endpoints
+│   │   ├── RagController.java            # RAG proxy endpoints
+│   │   ├── AnalyticsController.java      # Dashboard analytics
+│   │   ├── WeeklySummaryController.java  # Weekly summaries
+│   │   ├── HealthController.java         # Health check
+│   │   ├── RootController.java           # Root status
+│   │   └── UserModelConfigController.java# Per-user AI model config
 │   ├── dto/                              # Data Transfer Objects
 │   ├── entity/                           # JPA entities
 │   ├── repository/                       # Spring Data repositories
 │   ├── security/                         # JWT & Spring Security
 │   └── service/
-│       ├── AIClientService.java          # Direct OpenAI-compatible GPT/DeepSeek API (Tier-2 fallback)
-│       ├── ChatService.java              # 3-tier fallback chat logic
+│       ├── AIClientService.java          # Direct AI API (Tier-2 fallback, + user config support)
+│       ├── ChatService.java              # 3-tier fallback chat logic (user config → global)
+│       ├── UserModelConfigService.java   # Per-user AI model config CRUD
 │       ├── RagService.java               # Proxy to Python agent RAG endpoints
 │       ├── AuthService.java              # Authentication logic
 │       ├── WellnessRecordService.java    # Wellness records CRUD
 │       ├── RecommendationService.java    # AI recommendations
+│       ├── AnalyticsService.java         # Dashboard analytics
+│       ├── WellnessInsightsService.java  # Wellness stats & chat context builder
+│       ├── WeeklySummaryService.java     # Weekly summary generation
 │       └── JwtUtilProvider.java          # JWT utility bean
 └── src/main/resources/
     ├── application.yml                   # Application configuration
@@ -154,3 +169,14 @@ backend/
 ```
 
 Important: After cloning, you must start the Python agent first, then the backend.
+
+---
+
+## Related Documentation
+
+- [API Specification](api-spec.md) — Complete REST API reference including model config endpoints
+- [Database Design](database-design.md) — ERD and table details including `user_model_configs`
+- [CA Testing Guide](CA_TESTING.md) — Local setup and smoke test checklist
+- [Development Prompts](prompts.md) — System prompts used by WellBot and analysis agent
+- [Project Updates](updates.md) — Changelog and bug fix records
+- [Android Updates](../android/updates.md) — Android-specific update history
