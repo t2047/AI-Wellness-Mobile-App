@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.wellnessapp.R
 import com.wellnessapp.databinding.ItemChatMessageBinding
+import io.noties.markwon.Markwon
 
 /**
  * RecyclerView adapter for chat messages.
@@ -17,10 +18,17 @@ class ChatMessageAdapter :
     RecyclerView.Adapter<ChatMessageAdapter.ViewHolder>() {
 
     private val messages = mutableListOf<ChatMessageItem>()
+    private var markwon: Markwon? = null
 
     fun addMessage(item: ChatMessageItem) {
         messages.add(item)
         notifyItemInserted(messages.size - 1)
+    }
+
+    fun clearMessages() {
+        val size = messages.size
+        messages.clear()
+        notifyItemRangeRemoved(0, size)
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -49,6 +57,11 @@ class ChatMessageAdapter :
 
         fun bind(item: ChatMessageItem) {
             val context = binding.root.context
+            if (markwon == null) {
+                markwon = Markwon.create(context)
+            }
+            val markwonInstance = markwon!!
+
             when (item) {
                 is ChatMessageItem.User -> {
                     binding.tvSender.text = "You"
@@ -72,7 +85,7 @@ class ChatMessageAdapter :
                     binding.tvSender.text = "WellBot"
                     binding.tvSender.setTextColor(
                         ContextCompat.getColor(context, R.color.accent))
-                    binding.tvMessage.text = item.message
+                    markwonInstance.setMarkdown(binding.tvMessage, item.message)
                     binding.tvTime.visibility = android.view.View.GONE
 
                     // Align bot messages to the left

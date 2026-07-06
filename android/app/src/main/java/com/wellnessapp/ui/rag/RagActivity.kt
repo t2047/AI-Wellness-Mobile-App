@@ -1,7 +1,6 @@
 package com.wellnessapp.ui.rag
 
 import android.os.Bundle
-import android.text.Html
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -12,6 +11,7 @@ import com.wellnessapp.data.api.RetrofitClient
 import com.wellnessapp.data.model.RagAskRequest
 import com.wellnessapp.databinding.ActivityRagBinding
 import com.wellnessapp.util.TokenManager
+import io.noties.markwon.Markwon
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -24,11 +24,14 @@ import kotlinx.coroutines.launch
 class RagActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRagBinding
+    private lateinit var markwon: Markwon
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRagBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        markwon = Markwon.create(this)
 
         setupToolbar()
         setupListeners()
@@ -170,10 +173,7 @@ class RagActivity : AppCompatActivity() {
 
     private fun showAnswer(answer: String, sources: List<com.wellnessapp.data.model.RagSource>) {
         binding.cardAnswer.visibility = View.VISIBLE
-        binding.tvAnswer.text = Html.fromHtml(
-            answer.replace("\n", "<br>"),
-            Html.FROM_HTML_MODE_COMPACT
-        )
+        markwon.setMarkdown(binding.tvAnswer, answer)
 
         // Clear old sources
         binding.sourcesContainer.removeAllViews()
