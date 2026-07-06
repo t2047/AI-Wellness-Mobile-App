@@ -1,9 +1,9 @@
 package com.wellnessapp.ui.login
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.wellnessapp.data.api.RetrofitClient
@@ -14,7 +14,7 @@ import com.wellnessapp.util.TokenManager
 import kotlinx.coroutines.launch
 
 /**
- * Register screen — creates a new account and navigates to main on success.
+ * Register screen — creates a new account and returns to login on success.
  *
  * @author WellnessApp Team
  * @author ZHAO LEI
@@ -65,18 +65,7 @@ class RegisterActivity : AppCompatActivity() {
                     RegisterRequest(username, email, password)
                 )
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val auth = response.body()!!.data!!
-                    TokenManager.saveLoginSession(
-                        token = auth.token,
-                        username = auth.username,
-                        userId = auth.userId
-                    )
-                    Toast.makeText(
-                        this@RegisterActivity,
-                        "Account created!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    navigateToMain()
+                    returnToLogin(username)
                 } else {
                     val errorMsg = response.body()?.message
                         ?: "Registration failed"
@@ -95,12 +84,6 @@ class RegisterActivity : AppCompatActivity() {
         binding.btnRegister.isEnabled = !loading
     }
 
-    /**
-     * Opens the authenticated main screen and removes the login/register flow
-     * from the back stack after successful registration.
-     *
-     * @author ZHAO LEI
-     */
     private fun navigateToMain() {
         val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

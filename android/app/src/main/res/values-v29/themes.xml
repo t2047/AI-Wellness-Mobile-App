@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Author: ZHAO LEI — API 29-only dark mode configuration. -->
+    <style name="Theme.WellnessApp.PlainLogin" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:forceDarkAllowed">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

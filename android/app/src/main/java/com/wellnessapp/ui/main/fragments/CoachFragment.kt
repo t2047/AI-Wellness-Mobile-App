@@ -1,5 +1,6 @@
 package com.wellnessapp.ui.main.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,13 +11,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.wellnessapp.data.api.RetrofitClient
 import com.wellnessapp.databinding.FragmentCoachBinding
+import com.wellnessapp.ui.main.MainActivity
 import com.wellnessapp.ui.recommendation.RecommendationAdapter
+import com.wellnessapp.ui.summary.WeeklySummaryActivity
 import kotlinx.coroutines.launch
 
 /**
  * Coach tab content hosted inside MainActivity.
  *
  * @author Xuhan Zhang
+ * @author ZHAO LEI
  */
 class CoachFragment : Fragment() {
 
@@ -60,10 +64,14 @@ class CoachFragment : Fragment() {
      * Wires refresh and generate actions.
      *
      * @author Xuhan Zhang
+     * @author ZHAO LEI
      */
     private fun setupListeners() {
         binding.swipeRefresh.setOnRefreshListener { loadRecommendations() }
         binding.btnGenerate.setOnClickListener { triggerRecommendation() }
+        binding.btnWeeklySummaries.setOnClickListener {
+            startActivity(Intent(requireContext(), WeeklySummaryActivity::class.java))
+        }
     }
 
     /**
@@ -83,6 +91,8 @@ class CoachFragment : Fragment() {
                         if (recommendations.isEmpty()) View.VISIBLE else View.GONE
                     binding.recyclerView.visibility =
                         if (recommendations.isEmpty()) View.GONE else View.VISIBLE
+                } else if (response.code() == 401 || response.code() == 403) {
+                    handleSessionExpired()
                 }
             } catch (e: Exception) {
                 showMessage("Failed to load: ${e.localizedMessage}")
@@ -107,6 +117,8 @@ class CoachFragment : Fragment() {
                 if (response.isSuccessful && response.body()?.success == true) {
                     showMessage("Recommendation generated!")
                     loadRecommendations()
+                } else if (response.code() == 401 || response.code() == 403) {
+                    handleSessionExpired()
                 } else {
                     showMessage("Failed to generate: ${response.body()?.message}")
                 }
@@ -118,6 +130,16 @@ class CoachFragment : Fragment() {
                 }
             }
         }
+    }
+
+    /**
+     * Clears an expired session through the main navigation host.
+     *
+     * @author ZHAO LEI
+     */
+    private fun handleSessionExpired() {
+        showMessage("Session expired. Please log in again.")
+        (activity as? MainActivity)?.logout()
     }
 
     private fun showLoading(loading: Boolean) {

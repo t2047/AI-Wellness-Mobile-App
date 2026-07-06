@@ -20,6 +20,7 @@ import com.wellnessapp.util.TokenManager
  * Main navigation shell for the wellness app.
  *
  * @author Xuhan Zhang
+ * @author ZHAO LEI
  */
 class MainActivity : AppCompatActivity() {
 
@@ -28,6 +29,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!TokenManager.isLoggedIn()) {
+            navigateToLogin()
+            return
+        }
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -87,10 +92,20 @@ class MainActivity : AppCompatActivity() {
      */
     fun logout() {
         TokenManager.logout()
+        navigateToLogin()
+    }
+
+    /**
+     * Clears the authenticated task and displays the logged-out entry screen.
+     *
+     * @author ZHAO LEI
+     */
+    private fun navigateToLogin() {
         val intent = Intent(this, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         startActivity(intent)
+        finish()
     }
 
     /**

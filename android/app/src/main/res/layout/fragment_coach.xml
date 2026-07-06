@@ -68,8 +68,21 @@
         android:id="@+id/btnGenerate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
         android:text="Generate AI Recommendation"
         app:icon="@android:drawable/ic_menu_info_details" />
+
+    <!-- Author: ZHAO LEI — keeps weekly summaries reachable from the new main UI. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnWeeklySummaries"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/weekly_health_summaries"
+        app:icon="@android:drawable/ic_menu_week" />
 
 </LinearLayout>

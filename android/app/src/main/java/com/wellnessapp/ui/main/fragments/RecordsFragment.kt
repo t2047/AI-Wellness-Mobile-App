@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,12 +24,14 @@ import kotlinx.coroutines.launch
  * Records tab content hosted inside MainActivity.
  *
  * @author Xuhan Zhang
+ * @author ZHAO LEI
  */
 class RecordsFragment : Fragment() {
 
     private var _binding: FragmentRecordsBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: WellnessRecordAdapter
+    private var allRecords: List<WellnessRecord> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -76,9 +79,11 @@ class RecordsFragment : Fragment() {
      * Connects refresh and add actions.
      *
      * @author Xuhan Zhang
+     * @author ZHAO LEI
      */
     private fun setupListeners() {
         binding.swipeRefresh.setOnRefreshListener { loadRecords() }
+        binding.etSearchRecords.doAfterTextChanged { applyRecordFilter() }
         binding.fabAdd.setOnClickListener {
             startActivity(Intent(requireContext(), RecordFormActivity::class.java))
         }
@@ -95,12 +100,8 @@ class RecordsFragment : Fragment() {
             try {
                 val response = RetrofitClient.apiService.getWellnessRecords()
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val records = response.body()!!.data ?: emptyList()
-                    adapter.submitList(records)
-                    binding.tvEmpty.text = getString(R.string.no_data)
-                    binding.tvEmpty.visibility = if (records.isEmpty()) View.VISIBLE else View.GONE
-                    binding.recyclerView.visibility =
-                        if (records.isEmpty()) View.GONE else View.VISIBLE
+                    allRecords = response.body()!!.data ?: emptyList()
+                    applyRecordFilter()
                 } else if (response.code() == 401 || response.code() == 403) {
                     handleSessionExpired()
                 } else {
@@ -117,6 +118,37 @@ class RecordsFragment : Fragment() {
                 }
             }
         }
+    }
+
+    /**
+     * Filters loaded records using the search query without another API request.
+     *
+     * @author ZHAO LEI
+     */
+    private fun applyRecordFilter() {
+        val query = binding.etSearchRecords.text?.toString()?.trim()?.lowercase().orEmpty()
+        val filteredRecords = if (query.isEmpty()) {
+            allRecords
+        } else {
+            allRecords.filter { record ->
+                record.recordDate.lowercase().contains(query) ||
+                    record.activityName.orEmpty().lowercase().contains(query) ||
+                    record.sleepHours?.toString().orEmpty().contains(query) ||
+                    record.activityDurationMinutes?.toString().orEmpty().contains(query) ||
+                    record.notes.orEmpty().lowercase().contains(query)
+            }
+        }
+
+        adapter.submitList(filteredRecords)
+        binding.recyclerView.visibility =
+            if (filteredRecords.isEmpty()) View.GONE else View.VISIBLE
+        binding.tvEmpty.text = when {
+            allRecords.isEmpty() -> getString(R.string.no_data)
+            filteredRecords.isEmpty() -> getString(R.string.no_matching_records)
+            else -> getString(R.string.no_data)
+        }
+        binding.tvEmpty.visibility =
+            if (filteredRecords.isEmpty()) View.VISIBLE else View.GONE
     }
 
     private fun openEditForm(record: WellnessRecord) {
