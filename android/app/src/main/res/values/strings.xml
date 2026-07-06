@@ -40,21 +40,6 @@
     <string name="voice_prompt">Ask WellBot a wellness question</string>
     <string name="voice_unavailable">Voice input is not available on this device</string>
     <string name="voice_not_recognized">No speech was recognized</string>
-    <string name="nav_settings">Settings</string>
-    <string name="new_conversation">New Conversation</string>
-    <string name="new_chat">New Chat</string>
-    <string name="new_conversation_started">New conversation started</string>
-    <string name="model_config">AI Model Configuration</string>
-    <string name="provider_name">Provider</string>
-    <string name="base_url">Base URL</string>
-    <string name="api_key">API Key</string>
-    <string name="model_name">Model Name</string>
-    <string name="active_config">Active</string>
-    <string name="save_config">Save Configuration</string>
-    <string name="delete_config">Delete</string>
-    <string name="activate">Activate</string>
-    <string name="no_saved_configs">No saved configurations</string>
-    <string name="config_saved">Configuration saved</string>
-    <string name="config_deleted">Configuration deleted</string>
-    <string name="config_activated">Configuration activated</string>
+    <!-- Author: ZHAO LEI -->
+    <string name="weekly_health_summaries">Weekly Health Summaries</string>
 </resources>

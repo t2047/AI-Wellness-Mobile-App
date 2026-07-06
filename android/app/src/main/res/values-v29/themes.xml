@@ -1,16 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.WellnessApp" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryDark">@color/primaryDark</item>
-        <item name="colorAccent">@color/accent</item>
-        <item name="android:windowBackground">@color/background</item>
-    </style>
-
+    <!-- Author: ZHAO LEI — API 29-only dark mode configuration. -->
     <style name="Theme.WellnessApp.PlainLogin" parent="@android:style/Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@android:color/white</item>
         <item name="android:colorAccent">@color/primary</item>
         <item name="android:fontFamily">sans</item>
+        <item name="android:forceDarkAllowed">false</item>
         <item name="android:windowNoTitle">true</item>
     </style>
 </resources>
