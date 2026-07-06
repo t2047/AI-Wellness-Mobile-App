@@ -40,4 +40,6 @@
     <string name="voice_prompt">Ask WellBot a wellness question</string>
     <string name="voice_unavailable">Voice input is not available on this device</string>
     <string name="voice_not_recognized">No speech was recognized</string>
+    <!-- Author: ZHAO LEI -->
+    <string name="weekly_health_summaries">Weekly Health Summaries</string>
 </resources>
