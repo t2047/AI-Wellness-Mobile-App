@@ -23,6 +23,10 @@ import com.wellnessapp.data.model.AnalyticsResponse
 import com.wellnessapp.data.model.AnalyticsSummary
 import com.wellnessapp.databinding.ActivityAnalyticsBinding
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.WeekFields
+import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
@@ -35,6 +39,7 @@ class AnalyticsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAnalyticsBinding
     private lateinit var dailyAdapter: AnalyticsDailyAdapter
     private var selectedDays = DEFAULT_DAYS
+    private var currentDailyMetrics: List<AnalyticsDailyMetric> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -141,7 +146,8 @@ class AnalyticsActivity : AppCompatActivity() {
         binding.tvHealthInsight.text = buildHealthInsight(summary, wellnessScore)
         binding.tvInsightTagline.text = buildInsightTagline(wellnessScore)
         binding.tvSleepTrendAverage.text = "Avg: ${formatHours(summary.averageSleepHours)}"
-        renderTrendCharts(dashboard.dailyMetrics)
+        currentDailyMetrics = dashboard.dailyMetrics
+        renderTrendCharts(currentDailyMetrics)
         renderDailyDetails(dashboard)
     }
 
@@ -211,13 +217,24 @@ class AnalyticsActivity : AppCompatActivity() {
      * @author Xuhan Zhang
      */
     private fun renderTrendCharts(metrics: List<AnalyticsDailyMetric>) {
-        val sleepEntries = metrics.mapIndexedNotNull { index, metric ->
-            metric.averageSleepHours?.let { Entry(index.toFloat(), it.toFloat()) }
+        val points = if (selectedDays <= 7) {
+            metrics.map {
+                ChartPoint(
+                    label = formatChartDate(it.date),
+                    averageSleepHours = it.averageSleepHours,
+                    totalActivityMinutes = it.totalActivityMinutes
+                )
+            }
+        } else {
+            buildWeeklyChartPoints(metrics)
         }
-        val exerciseEntries = metrics.mapIndexed { index, metric ->
-            BarEntry(index.toFloat(), metric.totalActivityMinutes.toFloat())
+        val sleepEntries = points.mapIndexedNotNull { index, point ->
+            point.averageSleepHours?.let { Entry(index.toFloat(), it.toFloat()) }
         }
-        val labels = metrics.map { formatChartDate(it.date) }
+        val exerciseEntries = points.mapIndexed { index, point ->
+            BarEntry(index.toFloat(), point.totalActivityMinutes.toFloat())
+        }
+        val labels = points.map { it.label }
 
         renderLineChart(
             chart = binding.chartSleepTrend,
@@ -367,10 +384,12 @@ class AnalyticsActivity : AppCompatActivity() {
 
         val dataSet = BarDataSet(entries, label).apply {
             color = lineColor
+            setDrawValues(entries.count { it.y > 0f } <= VALUE_LABEL_LIMIT)
             valueTextColor = getColor(com.wellnessapp.R.color.textSecondary)
             valueTextSize = 9f
             valueFormatter = object : ValueFormatter() {
                 override fun getBarLabel(barEntry: BarEntry): String {
+                    if (barEntry.y <= 0f) return ""
                     return "${barEntry.y.formatChartValue()}$valueSuffix"
                 }
             }
@@ -398,6 +417,37 @@ class AnalyticsActivity : AppCompatActivity() {
      */
     private fun formatChartDate(date: String): String {
         return if (date.length >= 10) date.substring(5, 10) else date
+    }
+
+    private fun buildWeeklyChartPoints(metrics: List<AnalyticsDailyMetric>): List<ChartPoint> {
+        return metrics
+            .mapNotNull { metric ->
+                parseDate(metric.date)?.let { date -> date to metric }
+            }
+            .groupBy { (date, _) -> naturalWeekKey(date) }
+            .toSortedMap()
+            .map { (_, datedMetrics) ->
+                val weekMetrics = datedMetrics.map { it.second }
+                val firstDate = datedMetrics.first().first
+                val lastDate = datedMetrics.last().first
+                val sleepValues = weekMetrics.mapNotNull { it.averageSleepHours }
+                ChartPoint(
+                    label = "${firstDate.format(CHART_DATE_FORMATTER)}-${lastDate.format(CHART_DATE_FORMATTER)}",
+                    averageSleepHours = sleepValues.takeIf { it.isNotEmpty() }?.average(),
+                    totalActivityMinutes = weekMetrics.sumOf { it.totalActivityMinutes }
+                )
+            }
+    }
+
+    private fun parseDate(date: String): LocalDate? {
+        return runCatching { LocalDate.parse(date.take(10)) }.getOrNull()
+    }
+
+    private fun naturalWeekKey(date: LocalDate): String {
+        val weekFields = WeekFields.ISO
+        val weekBasedYear = date.get(weekFields.weekBasedYear())
+        val weekOfYear = date.get(weekFields.weekOfWeekBasedYear())
+        return "%04d-%02d".format(Locale.US, weekBasedYear, weekOfYear)
     }
 
     private fun getChartLabelCount(labelSize: Int): Int {
@@ -478,11 +528,18 @@ class AnalyticsActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
+    private data class ChartPoint(
+        val label: String,
+        val averageSleepHours: Double?,
+        val totalActivityMinutes: Int
+    )
+
     companion object {
         private const val DEFAULT_DAYS = 30
         private const val DAILY_DETAILS_LIMIT = 7
         private const val MAX_SHORT_RANGE_LABELS = 7
         private const val MAX_LONG_RANGE_LABELS = 5
         private const val VALUE_LABEL_LIMIT = 10
+        private val CHART_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("MM-dd")
     }
 }
