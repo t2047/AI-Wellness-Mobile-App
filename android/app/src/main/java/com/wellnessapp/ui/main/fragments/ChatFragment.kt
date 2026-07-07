@@ -38,24 +38,6 @@ class ChatFragment : Fragment() {
     private lateinit var adapter: ChatMessageAdapter
     private val speechLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-<<<<<<< Updated upstream
-            if (result.resultCode != Activity.RESULT_OK) {
-                return@registerForActivityResult
-            }
-            val spokenText = result.data
-                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                ?.firstOrNull()
-                ?.trim()
-                .orEmpty()
-            val currentBinding = _binding ?: return@registerForActivityResult
-            if (spokenText.isNotBlank()) {
-                currentBinding.etMessage.setText(spokenText)
-                currentBinding.etMessage.setSelection(spokenText.length)
-                sendMessage()
-            } else {
-                Toast.makeText(requireContext(), R.string.voice_not_recognized, Toast.LENGTH_SHORT)
-                    .show()
-=======
             if (result.resultCode == Activity.RESULT_OK) {
                 val spokenText = result.data
                     ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
@@ -69,7 +51,6 @@ class ChatFragment : Fragment() {
                 } else {
                     Toast.makeText(requireContext(), R.string.voice_not_recognized, Toast.LENGTH_SHORT).show()
                 }
->>>>>>> Stashed changes
             }
         }
 
@@ -116,7 +97,6 @@ class ChatFragment : Fragment() {
         binding.btnSend.setOnClickListener { sendMessage() }
         binding.btnVoice.setOnClickListener { startVoiceInput() }
         binding.btnNewChat.setOnClickListener { startNewConversation() }
-        binding.btnVoice.setOnClickListener { startVoiceInput() }
         binding.etMessage.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 sendMessage()
@@ -131,23 +111,6 @@ class ChatFragment : Fragment() {
         adapter.clearMessages()
         binding.tvEmpty.visibility = View.VISIBLE
         binding.etMessage.text?.clear()
-    }
-
-    private fun startVoiceInput() {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
-            putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_prompt))
-        }
-
-        try {
-            speechLauncher.launch(intent)
-        } catch (_: ActivityNotFoundException) {
-            Toast.makeText(requireContext(), R.string.voice_unavailable, Toast.LENGTH_SHORT).show()
-        }
     }
 
     /**
