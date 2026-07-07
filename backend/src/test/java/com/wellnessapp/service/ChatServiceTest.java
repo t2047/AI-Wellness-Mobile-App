@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -33,12 +34,14 @@ class ChatServiceTest {
     private ChatMessageRepository chatMessageRepository;
     private WellnessInsightsService wellnessInsightsService;
     private AIClientService aiClientService;
+    private UserModelConfigService userModelConfigService;
 
     @BeforeEach
     void setUp() throws IOException {
         chatMessageRepository = mock(ChatMessageRepository.class);
         wellnessInsightsService = mock(WellnessInsightsService.class);
         aiClientService = mock(AIClientService.class);
+        userModelConfigService = mock(UserModelConfigService.class);
 
         when(chatMessageRepository.findByUserIdOrderByCreatedAtDesc(1L))
                 .thenReturn(new ArrayList<>());
@@ -46,6 +49,8 @@ class ChatServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
         when(wellnessInsightsService.buildChatContext(any(User.class), anyInt()))
                 .thenReturn("Personal wellness context for test.");
+        when(userModelConfigService.getActiveConfigEntity(any(User.class)))
+                .thenReturn(Optional.empty());
 
         agentServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         agentServer.createContext("/chat", exchange -> {
@@ -88,6 +93,7 @@ class ChatServiceTest {
                 chatMessageRepository,
                 aiClientService,
                 wellnessInsightsService,
+                userModelConfigService,
                 agentUrl);
         User user = User.builder().id(1L).username("test-user").build();
 

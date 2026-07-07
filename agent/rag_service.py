@@ -135,7 +135,7 @@ class RagConfig:
     deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
     deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
     deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
-    doubao_base_url: str = os.getenv("DOUBAO_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3")
+    doubao_base_url: str = os.getenv("DOUBAO_BASE_URL", "https://ark.cn-beijing.volces.com/api/coding/v3")
     doubao_api_key: str = os.getenv("DOUBAO_API_KEY", "")
     doubao_model: str = os.getenv("DOUBAO_EMBED_MODEL", "doubao-embedding-vision-251215")
     embedding_batch_delay: float = float(os.getenv("RAG_EMBED_BATCH_DELAY", "0.5"))
