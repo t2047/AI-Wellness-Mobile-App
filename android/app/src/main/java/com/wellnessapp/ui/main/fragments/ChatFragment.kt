@@ -38,22 +38,19 @@ class ChatFragment : Fragment() {
     private lateinit var adapter: ChatMessageAdapter
     private val speechLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode != Activity.RESULT_OK) {
-                return@registerForActivityResult
-            }
-            val spokenText = result.data
-                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                ?.firstOrNull()
-                ?.trim()
-                .orEmpty()
-            val currentBinding = _binding ?: return@registerForActivityResult
-            if (spokenText.isNotBlank()) {
-                currentBinding.etMessage.setText(spokenText)
-                currentBinding.etMessage.setSelection(spokenText.length)
-                sendMessage()
-            } else {
-                Toast.makeText(requireContext(), R.string.voice_not_recognized, Toast.LENGTH_SHORT)
-                    .show()
+            if (result.resultCode == Activity.RESULT_OK) {
+                val spokenText = result.data
+                    ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                    ?.firstOrNull()
+                    ?.trim()
+                    .orEmpty()
+                if (spokenText.isNotBlank()) {
+                    binding.etMessage.setText(spokenText)
+                    binding.etMessage.setSelection(spokenText.length)
+                    sendMessage()
+                } else {
+                    Toast.makeText(requireContext(), R.string.voice_not_recognized, Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -98,8 +95,8 @@ class ChatFragment : Fragment() {
      */
     private fun setupListeners() {
         binding.btnSend.setOnClickListener { sendMessage() }
-        binding.btnNewChat.setOnClickListener { startNewConversation() }
         binding.btnVoice.setOnClickListener { startVoiceInput() }
+        binding.btnNewChat.setOnClickListener { startNewConversation() }
         binding.etMessage.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 sendMessage()
@@ -169,7 +166,7 @@ class ChatFragment : Fragment() {
                     return@launch
                 } else {
                     adapter.addMessage(
-                        ChatMessageItem.Bot("Sorry, I couldn't process that. Please try again.")
+                        ChatMessageItem.Bot("Sorry, It seems there are some issues with the chat service. Please wait a bit and try again, or contact the administrator.")
                     )
                 }
                 binding.recyclerView.scrollToPosition(adapter.itemCount - 1)

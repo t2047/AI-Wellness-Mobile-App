@@ -15,7 +15,6 @@ android/app/build/
 # Python
 __pycache__/
 *.pyc
-agent/.rag_store/
 
 # Scraper data (generated)
 scraper/output/
@@ -27,7 +26,6 @@ tmp/
 .env
 .env.*
 !.env.example
-.rag_store/
 *.pem
 *.p12
 *.jks
