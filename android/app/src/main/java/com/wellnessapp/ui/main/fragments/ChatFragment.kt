@@ -38,6 +38,7 @@ class ChatFragment : Fragment() {
     private lateinit var adapter: ChatMessageAdapter
     private val speechLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+<<<<<<< Updated upstream
             if (result.resultCode != Activity.RESULT_OK) {
                 return@registerForActivityResult
             }
@@ -54,6 +55,21 @@ class ChatFragment : Fragment() {
             } else {
                 Toast.makeText(requireContext(), R.string.voice_not_recognized, Toast.LENGTH_SHORT)
                     .show()
+=======
+            if (result.resultCode == Activity.RESULT_OK) {
+                val spokenText = result.data
+                    ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                    ?.firstOrNull()
+                    ?.trim()
+                    .orEmpty()
+                if (spokenText.isNotBlank()) {
+                    binding.etMessage.setText(spokenText)
+                    binding.etMessage.setSelection(spokenText.length)
+                    sendMessage()
+                } else {
+                    Toast.makeText(requireContext(), R.string.voice_not_recognized, Toast.LENGTH_SHORT).show()
+                }
+>>>>>>> Stashed changes
             }
         }
 
@@ -92,11 +108,14 @@ class ChatFragment : Fragment() {
     /**
      * Wires text, voice, and IME send actions.
      *
+     * @author Tao Yuchen
      * @author Xuhan Zhang
      * @author ZHAO LEI
      */
     private fun setupListeners() {
         binding.btnSend.setOnClickListener { sendMessage() }
+        binding.btnVoice.setOnClickListener { startVoiceInput() }
+        binding.btnNewChat.setOnClickListener { startNewConversation() }
         binding.btnVoice.setOnClickListener { startVoiceInput() }
         binding.etMessage.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
@@ -105,6 +124,29 @@ class ChatFragment : Fragment() {
             } else {
                 false
             }
+        }
+    }
+
+    private fun startNewConversation() {
+        adapter.clearMessages()
+        binding.tvEmpty.visibility = View.VISIBLE
+        binding.etMessage.text?.clear()
+    }
+
+    private fun startVoiceInput() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
+            putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_prompt))
+        }
+
+        try {
+            speechLauncher.launch(intent)
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(requireContext(), R.string.voice_unavailable, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -161,7 +203,7 @@ class ChatFragment : Fragment() {
                     return@launch
                 } else {
                     adapter.addMessage(
-                        ChatMessageItem.Bot("Sorry, I couldn't process that. Please try again.")
+                        ChatMessageItem.Bot("Sorry, It seems there are some issues with the chat service. Please wait a bit and try again, or contact the administrator.")
                     )
                 }
                 binding.recyclerView.scrollToPosition(adapter.itemCount - 1)

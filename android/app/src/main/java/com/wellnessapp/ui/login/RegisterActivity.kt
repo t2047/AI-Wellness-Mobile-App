@@ -83,8 +83,7 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     /**
-     * Returns the registered username to LoginActivity. The password remains
-     * empty so the user must explicitly authenticate.
+     * Returns the created username to LoginActivity without starting a session.
      *
      * @author ZHAO LEI
      */
@@ -100,6 +99,6 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     companion object {
-        const val EXTRA_REGISTERED_USERNAME = "registered_username"
+        const val EXTRA_REGISTERED_USERNAME = "extra_registered_username"
     }
 }
