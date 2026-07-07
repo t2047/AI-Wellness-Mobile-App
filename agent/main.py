@@ -38,7 +38,7 @@ else:
 app = Flask(__name__)
 CORS(app)
 
-# Configuration
+# Fallback Configuration
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8080")
 JWT_TOKEN = os.environ.get("AGENT_JWT_TOKEN", "")
 # ZHAO LEI: DashScope uses the same OpenAI-compatible authentication flow.
