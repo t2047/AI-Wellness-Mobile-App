@@ -131,7 +131,7 @@ def _chunk_text(text: str, max_chars: int = 1200) -> List[str]:
 @dataclass(frozen=True)
 class RagConfig:
     corpus_glob: str = os.getenv("RAG_CORPUS_GLOB", str(Path(__file__).resolve().parent.parent / "scraper" / "output" / "*_msd_chunks.jsonl"))
-    store_path: Path = Path(os.getenv("RAG_STORE_PATH", str(Path(__file__).resolve().parent / ".rag_store" / "rag_index.json")))
+    store_path: Path = Path(__file__).resolve().parent / ".rag_store" / "rag_index.json"
     deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
     deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
     deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
