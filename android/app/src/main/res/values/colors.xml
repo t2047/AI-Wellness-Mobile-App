@@ -11,6 +11,7 @@
     <color name="infoLight">#E3F2FD</color>
     <color name="infoText">#1976D2</color>
     <color name="background">#FAFAFA</color>
+    <color name="welleafIconBackground">#E2F8EC</color>
     <color name="surface">#FFFFFF</color>
     <color name="error">#F44336</color>
     <color name="onPrimary">#FFFFFF</color>
