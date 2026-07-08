@@ -8,6 +8,7 @@ import retrofit2.http.*
  * Retrofit API service interface defining all backend endpoints.
  *
  * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 interface ApiService {
 

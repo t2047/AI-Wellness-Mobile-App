@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Business logic for manually generated weekly health summaries.
  *
- * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 @Service
 public class WeeklySummaryService {

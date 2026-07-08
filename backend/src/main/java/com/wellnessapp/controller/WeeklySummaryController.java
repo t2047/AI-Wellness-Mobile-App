@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * REST controller for weekly health summaries.
  *
- * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 @RestController
 @RequestMapping("/api/weekly-summaries")

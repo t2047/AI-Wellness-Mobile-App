@@ -54,6 +54,11 @@ public class AIClientService {
             - If you don't know something or are unsure, be honest about it.
             """;
 
+/**
+ * AI provider configuration used by chatbot and weekly summaries.
+ *
+ * @author Liu Zhuocheng
+ */
     public AIClientService(
             @Value("${ai.provider:openai}") String provider,
             @Value("${openai.api-key:}") String openAiApiKey,

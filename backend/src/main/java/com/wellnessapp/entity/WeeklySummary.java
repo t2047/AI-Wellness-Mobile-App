@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 /**
  * Weekly health summary generated for a user's own wellness records.
  *
- * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 @Entity
 @Table(name = "weekly_summaries")

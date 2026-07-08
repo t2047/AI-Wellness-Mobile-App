@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
  * and allows triggering new analysis.
  *
  * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 class RecommendationActivity : AppCompatActivity() {
 

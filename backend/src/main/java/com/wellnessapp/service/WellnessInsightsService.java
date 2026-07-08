@@ -15,7 +15,7 @@ import java.util.Set;
 /**
  * Builds compact wellness statistics from a user's own records.
  *
- * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 @Service
 public class WellnessInsightsService {

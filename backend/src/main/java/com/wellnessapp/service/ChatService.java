@@ -37,6 +37,7 @@ import com.wellnessapp.repository.ChatMessageRepository;
  *
  * @author WellnessApp Team
  * @author ZHAO LEI
+ * @author Liu Zhuocheng
  */
 @Service
 public class ChatService {

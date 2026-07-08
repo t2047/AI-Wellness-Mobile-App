@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Repository for generated weekly summaries.
  *
- * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 @Repository
 public interface WeeklySummaryRepository extends JpaRepository<WeeklySummary, Long> {

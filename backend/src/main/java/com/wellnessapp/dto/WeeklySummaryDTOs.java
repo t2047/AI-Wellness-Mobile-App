@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 /**
  * Weekly summary DTOs.
  *
- * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 public class WeeklySummaryDTOs {
 

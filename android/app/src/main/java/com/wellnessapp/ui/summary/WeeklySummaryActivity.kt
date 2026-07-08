@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 /**
  * Screen for manually generating and viewing weekly health summaries.
  *
- * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 class WeeklySummaryActivity : AppCompatActivity() {
 

@@ -12,7 +12,7 @@ import java.util.Locale
 /**
  * RecyclerView adapter for weekly health summaries.
  *
- * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 class WeeklySummaryAdapter :
     ListAdapter<WeeklySummary, WeeklySummaryAdapter.ViewHolder>(DiffCallback) {
