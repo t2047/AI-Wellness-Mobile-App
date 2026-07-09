@@ -150,7 +150,7 @@ class RagActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val response = RetrofitClient.apiService.askRag(
-                    RagAskRequest(question = question, topK = 5)
+                    RagAskRequest(question = question, topK = 3)
                 )
                 if (response.isSuccessful && response.body()?.success == true) {
                     val data = response.body()!!.data

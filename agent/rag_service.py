@@ -8,6 +8,7 @@ Design goals:
 - fall back safely when required keys are missing
 @author Tao Yuchen
 @author Zhao Lei
+@author Wu Tianzhuo
 """
 
 from __future__ import annotations
@@ -143,7 +144,7 @@ class RagConfig:
     doubao_model: str = os.getenv("DOUBAO_EMBED_MODEL", "doubao-embedding-vision-251215")
     embedding_batch_delay: float = float(os.getenv("RAG_EMBED_BATCH_DELAY", "0.5"))
     embedding_max_retries: int = int(os.getenv("RAG_EMBED_MAX_RETRIES", "5"))
-    top_k: int = int(os.getenv("RAG_TOP_K", "5"))
+    top_k: int = int(os.getenv("RAG_TOP_K", "3"))
     retrieval_chunk_max_chars: int = int(os.getenv("RAG_CHUNK_MAX_CHARS", "1200"))
     answer_max_tokens: int = int(os.getenv("RAG_ANSWER_MAX_TOKENS", "900"))
     answer_temperature: float = float(os.getenv("RAG_ANSWER_TEMPERATURE", "0.2"))
