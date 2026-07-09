@@ -22,7 +22,7 @@ import time
 import uuid
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -660,7 +660,7 @@ class RagService:
             print("[RAG]  No documents in index")
             return []
 
-        print(f"[RAG]  Embedding query...")
+        print("[RAG]  Embedding query...")
         query_embedding = self.embedding_client.embed_texts([question])[0]
         query_embedding = self._normalize_vector(query_embedding)
         k = top_k or self.config.top_k
@@ -956,7 +956,7 @@ class RagService:
 
         # ── Exhausted tool rounds ──
         # Force a final answer without tools
-        print(f"[RAG-Chat] Max tool rounds reached, requesting final answer")
+        print("[RAG-Chat] Max tool rounds reached, requesting final answer")
         messages.append({
             "role": "user",
             "content": "Please provide your final answer based on the tool results above. Do NOT call any more tools.",
