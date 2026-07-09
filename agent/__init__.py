@@ -12,6 +12,7 @@ Architecture:
 2. Analyze trends (sleep, activity, consistency)
 3. Generate personalized recommendations
 4. Post recommendations back to backend for storage
+@author Jia Qianrui
 """
 
 __version__ = "0.1.0"

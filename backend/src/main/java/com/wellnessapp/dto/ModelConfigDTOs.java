@@ -1,3 +1,6 @@
+/**
+ * @author Tao Yuchen
+ */
 package com.wellnessapp.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;

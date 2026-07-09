@@ -1,3 +1,6 @@
+/**
+ * @author Liu Zhuocheng
+ */
 package com.wellnessapp.ui.summary
 
 import android.os.Bundle

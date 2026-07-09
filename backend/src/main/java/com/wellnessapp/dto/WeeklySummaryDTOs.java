@@ -1,3 +1,6 @@
+/**
+ * @author Liu Zhuocheng
+ */
 package com.wellnessapp.dto;
 
 import lombok.AllArgsConstructor;

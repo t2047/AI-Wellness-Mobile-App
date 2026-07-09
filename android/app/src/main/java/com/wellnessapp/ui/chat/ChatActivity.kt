@@ -1,3 +1,9 @@
+/**
+ * @author Jia Qianrui
+ * @author Zhao Lei
+ * @author Cai Hanbo
+ * @author Tao Yuchen
+ */
 package com.wellnessapp.ui.chat
 
 import android.app.Activity

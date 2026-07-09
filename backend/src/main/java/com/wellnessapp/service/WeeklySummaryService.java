@@ -1,3 +1,6 @@
+/**
+ * @author Liu Zhuocheng
+ */
 package com.wellnessapp.service;
 
 import com.wellnessapp.dto.WeeklySummaryDTOs.WeeklySummaryResponse;

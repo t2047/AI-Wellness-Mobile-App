@@ -1,3 +1,6 @@
+/**
+ * @author Zhao Lei
+ */
 package com.wellnessapp.data.model
 
 import com.google.gson.Gson

@@ -1,3 +1,6 @@
+/**
+ * @author Tao Yuchen
+ */
 package com.wellnessapp.ui.rag
 
 import android.os.Bundle

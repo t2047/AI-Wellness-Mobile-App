@@ -1,3 +1,9 @@
+/**
+ * @author Jia Qianrui
+ * @author Tao Yuchen
+ * @author Cai Hanbo
+ * @author Zhang Xuhan
+ */
 package com.wellnessapp.ui.health
 
 import android.content.Intent

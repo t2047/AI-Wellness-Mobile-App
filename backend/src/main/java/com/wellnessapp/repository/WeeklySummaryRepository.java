@@ -1,3 +1,6 @@
+/**
+ * @author Liu Zhuocheng
+ */
 package com.wellnessapp.repository;
 
 import com.wellnessapp.entity.WeeklySummary;

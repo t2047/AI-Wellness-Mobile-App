@@ -6,8 +6,9 @@ Design goals:
 - cache embeddings locally for fast repeated queries
 - use chunk-level retrieval with source metadata for citations
 - fall back safely when required keys are missing
-
-Author: Wu Tianzhuo, WellnessApp Team
+@author Tao Yuchen
+@author Zhao Lei
+@author Wu Tianzhuo
 """
 
 from __future__ import annotations

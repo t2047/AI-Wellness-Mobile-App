@@ -1,3 +1,6 @@
+/**
+ * @author Tao Yuchen
+ */
 package com.wellnessapp.ui.main.fragments
 
 import android.content.Intent

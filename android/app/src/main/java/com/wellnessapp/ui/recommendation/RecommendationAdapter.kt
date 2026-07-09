@@ -1,3 +1,6 @@
+/**
+ * @author Jia Qianrui
+ */
 package com.wellnessapp.ui.recommendation
 
 import android.view.LayoutInflater

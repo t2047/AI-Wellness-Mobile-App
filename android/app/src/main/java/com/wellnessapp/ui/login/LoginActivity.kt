@@ -1,3 +1,9 @@
+/**
+ * @author Jia Qianrui
+ * @author Zhang Xuhan
+ * @author Zhao Lei
+ * @author Tao Yuchen
+ */
 package com.wellnessapp.ui.login
 
 import android.app.Activity

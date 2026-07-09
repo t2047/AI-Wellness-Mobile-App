@@ -9,6 +9,7 @@ Implements the agentic AI workflow:
 
 Author: WellnessApp Team
 Date: 2026-06-25
+@author Jia Qianrui
 """
 
 import json

@@ -1,3 +1,9 @@
+/**
+ * @author Jia Qianrui
+ * @author Tao Yuchen
+ * @author Liu Zhuocheng
+ * @author Zhao Lei
+ */
 package com.wellnessapp.service;
 
 import java.time.LocalDateTime;
