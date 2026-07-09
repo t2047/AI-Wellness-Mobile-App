@@ -1,3 +1,6 @@
+/**
+ * @author Jia Qianrui
+ */
 package com.wellnessapp;
 
 import org.springframework.boot.SpringApplication;

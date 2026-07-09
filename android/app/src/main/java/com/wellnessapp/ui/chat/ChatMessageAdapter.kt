@@ -1,3 +1,7 @@
+/**
+ * @author Jia Qianrui
+ * @author Tao Yuchen
+ */
 package com.wellnessapp.ui.chat
 
 import android.view.Gravity

@@ -1,3 +1,7 @@
+/**
+ * @author Jia Qianrui
+ * @author Cai Hanbo
+ */
 package com.wellnessapp.service;
 
 import com.wellnessapp.dto.WellnessRecordDTOs.*;

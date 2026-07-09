@@ -1,3 +1,7 @@
+/**
+ * @author Jia Qianrui
+ * @author Liu Zhuocheng
+ */
 package com.wellnessapp.ui.recommendation
 
 import android.content.Intent
@@ -17,6 +21,7 @@ import kotlinx.coroutines.launch
  * and allows triggering new analysis.
  *
  * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 class RecommendationActivity : AppCompatActivity() {
 

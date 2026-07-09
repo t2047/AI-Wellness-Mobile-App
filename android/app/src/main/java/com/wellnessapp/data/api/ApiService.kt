@@ -1,3 +1,9 @@
+/**
+ * @author Jia Qianrui
+ * @author Tao Yuchen
+ * @author Liu Zhuocheng
+ * @author Zhang Xuhan
+ */
 package com.wellnessapp.data.api
 
 import com.wellnessapp.data.model.*
@@ -8,6 +14,7 @@ import retrofit2.http.*
  * Retrofit API service interface defining all backend endpoints.
  *
  * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 interface ApiService {
 

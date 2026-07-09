@@ -1,3 +1,10 @@
+/**
+ * @author Jia Qianrui
+ * @author Tao Yuchen
+ * @author Liu Zhuocheng
+ * @author Zhao Lei
+ * @author Zhang Xuhan
+ */
 package com.wellnessapp.data.model
 
 import com.google.gson.annotations.SerializedName
@@ -81,6 +88,11 @@ data class Recommendation(
 
 // --- Weekly Summary ---
 
+/**
+ * Weekly wellness summary returned by the backend.
+ *
+ * @author Liu Zhuocheng
+ */
 data class WeeklySummary(
     @SerializedName("id") val id: Long? = null,
     @SerializedName("weekStartDate") val weekStartDate: String,

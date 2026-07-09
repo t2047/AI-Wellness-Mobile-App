@@ -1,11 +1,13 @@
 """
-RAG service built on DeepSeek + Doubao Embeddings.
+RAG service built on an OpenAI-compatible chat model + Doubao Embeddings.
 
 Design goals:
 - keep API keys out of source code
 - cache embeddings locally for fast repeated queries
 - use chunk-level retrieval with source metadata for citations
 - fall back safely when required keys are missing
+@author Tao Yuchen
+@author Zhao Lei
 """
 
 from __future__ import annotations
@@ -22,7 +24,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 from openai import OpenAI
 
 import requests
@@ -131,10 +133,11 @@ def _chunk_text(text: str, max_chars: int = 1200) -> List[str]:
 @dataclass(frozen=True)
 class RagConfig:
     corpus_glob: str = os.getenv("RAG_CORPUS_GLOB", str(Path(__file__).resolve().parent.parent / "scraper" / "output" / "*_msd_chunks.jsonl"))
-    store_path: Path = Path(os.getenv("RAG_STORE_PATH", str(Path(__file__).resolve().parent / ".rag_store" / "rag_index.json")))
-    deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-    deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
-    deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+    store_path: Path = Path(__file__).resolve().parent / ".rag_store" / "rag_index.json"
+    rag_chat_provider: str = os.getenv("RAG_CHAT_PROVIDER", os.getenv("AI_PROVIDER", "openai"))
+    rag_chat_base_url: str = os.getenv("RAG_CHAT_BASE_URL", os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"))
+    rag_chat_api_key: str = os.getenv("RAG_CHAT_API_KEY", os.getenv("DEEPSEEK_API_KEY", ""))
+    rag_chat_model: str = os.getenv("RAG_CHAT_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-chat"))
     doubao_base_url: str = os.getenv("DOUBAO_BASE_URL", "https://ark.cn-beijing.volces.com/api/coding/v3")
     doubao_api_key: str = os.getenv("DOUBAO_API_KEY", "")
     doubao_model: str = os.getenv("DOUBAO_EMBED_MODEL", "doubao-embedding-vision-251215")
@@ -244,8 +247,9 @@ class DoubaoEmbeddingClient:
         raise RuntimeError(f"Embedding failed after {self.max_retries} retries") from last_exc
 
 
-class DeepSeekChatClient:
-    def __init__(self, base_url: str, api_key: str, model: str, timeout: int = 60):
+class OpenAICompatibleChatClient:
+    def __init__(self, provider: str, base_url: str, api_key: str, model: str, timeout: int = 60):
+        self.provider = (provider or "openai-compatible").strip()
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
@@ -269,14 +273,14 @@ class DeepSeekChatClient:
         """Extract the first choice message from the response."""
         choices = payload.get("choices") or []
         if not choices:
-            raise RuntimeError("DeepSeek response did not contain choices")
+            raise RuntimeError(f"{self.provider} response did not contain choices")
         return choices[0].get("message") or {}
 
     def complete(self, messages: Sequence[Dict[str, str]], max_tokens: int, temperature: float) -> str:
         if not self.api_key:
-            raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+            raise RuntimeError("RAG_CHAT_API_KEY is not configured")
 
-        print(f"[RAG] DeepSeek request: max_tokens={max_tokens}, temperature={temperature}")
+        print(f"[RAG] {self.provider} request: model={self.model}, max_tokens={max_tokens}, temperature={temperature}")
         payload = self._post({
             "model": self.model,
             "messages": list(messages),
@@ -287,7 +291,7 @@ class DeepSeekChatClient:
         message = self._parse_choice(payload)
         content = message.get("content")
         if not content:
-            raise RuntimeError("DeepSeek response did not contain message content")
+            raise RuntimeError(f"{self.provider} response did not contain message content")
         return str(content).strip()
 
     # ── Function Calling (Tool Use) support ──────────────────────────
@@ -308,9 +312,9 @@ class DeepSeekChatClient:
           - "tool_calls": list of tool-call objects (id, function.name, function.arguments)
         """
         if not self.api_key:
-            raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+            raise RuntimeError("RAG_CHAT_API_KEY is not configured")
 
-        print(f"[RAG] DeepSeek tool-calling request: tools={[t['function']['name'] for t in tools]}")
+        print(f"[RAG] {self.provider} tool-calling request: model={self.model}, tools={[t['function']['name'] for t in tools]}")
         payload = self._post({
             "model": self.model,
             "messages": list(messages),
@@ -333,10 +337,11 @@ class RagService:
             batch_delay=self.config.embedding_batch_delay,
             max_retries=self.config.embedding_max_retries,
         )
-        self.chat_client = DeepSeekChatClient(
-            base_url=self.config.deepseek_base_url,
-            api_key=self.config.deepseek_api_key,
-            model=self.config.deepseek_model,
+        self.chat_client = OpenAICompatibleChatClient(
+            provider=self.config.rag_chat_provider,
+            base_url=self.config.rag_chat_base_url,
+            api_key=self.config.rag_chat_api_key,
+            model=self.config.rag_chat_model,
         )
         self._cache: Optional[Dict[str, Any]] = None
 
@@ -704,7 +709,7 @@ class RagService:
             "Return a short answer grounded in the context, followed by a bullet list of sources."
         )
 
-        print(f"[RAG]  Calling DeepSeek LLM (model={self.config.deepseek_model})...")
+        print(f"[RAG]  Calling RAG chat LLM (provider={self.config.rag_chat_provider}, model={self.config.rag_chat_model})...")
         answer = self.chat_client.complete(
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -740,7 +745,9 @@ class RagService:
             "documentCount": index.get("document_count", 0),
             "sourceCount": index.get("source_count", 0),
             "corpusGlob": self.config.corpus_glob,
-            "deepseekModel": self.config.deepseek_model,
+            "chatProvider": self.config.rag_chat_provider,
+            "chatModel": self.config.rag_chat_model,
+            "deepseekModel": self.config.rag_chat_model,
             "doubaoModel": self.config.doubao_model,
         }
 

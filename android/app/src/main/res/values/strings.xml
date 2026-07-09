@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Wellness App</string>
+    <string name="app_name">Leafhealth</string>
     <string name="login">Login</string>
     <string name="logout">Logout</string>
     <string name="username">Username</string>
@@ -27,7 +27,7 @@
     <string name="nav_records">Records</string>
     <string name="nav_coach">Coach</string>
     <string name="nav_chat">Chat</string>
-    <string name="nav_knowledge">Knowledge</string>
+    <string name="nav_profile">Profile</string>
     <string name="dashboard_preview_subtitle">Your wellness overview</string>
     <string name="open_dashboard">Open Dashboard</string>
     <string name="loading">Loading...</string>

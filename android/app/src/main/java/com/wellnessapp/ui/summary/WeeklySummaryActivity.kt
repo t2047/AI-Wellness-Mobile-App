@@ -1,3 +1,6 @@
+/**
+ * @author Liu Zhuocheng
+ */
 package com.wellnessapp.ui.summary
 
 import android.os.Bundle
@@ -13,7 +16,7 @@ import kotlinx.coroutines.launch
 /**
  * Screen for manually generating and viewing weekly health summaries.
  *
- * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 class WeeklySummaryActivity : AppCompatActivity() {
 

@@ -1,3 +1,10 @@
+/**
+ * @author Jia Qianrui
+ * @author Tao Yuchen
+ * @author Cai Hanbo
+ * @author Zhang Xuhan
+ * @author Zhao Lei
+ */
 package com.wellnessapp.ui.main.fragments
 
 import android.content.Intent
@@ -197,6 +204,7 @@ class RecordsFragment : Fragment() {
     }
 
     private fun showError(message: String) {
+        if (_binding == null || !isAdded) return
         binding.tvEmpty.text = message
         binding.tvEmpty.visibility = View.VISIBLE
     }

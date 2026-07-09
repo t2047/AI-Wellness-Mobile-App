@@ -1,3 +1,7 @@
+/**
+ * @author Jia Qianrui
+ * @author Cai Hanbo
+ */
 package com.wellnessapp.dto;
 
 import jakarta.validation.constraints.DecimalMax;

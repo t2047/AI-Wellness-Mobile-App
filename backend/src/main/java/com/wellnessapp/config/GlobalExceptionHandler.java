@@ -1,3 +1,7 @@
+/**
+ * @author Jia Qianrui
+ * @author Zhang Xuhan
+ */
 package com.wellnessapp.config;
 
 import com.wellnessapp.dto.ApiResponse;

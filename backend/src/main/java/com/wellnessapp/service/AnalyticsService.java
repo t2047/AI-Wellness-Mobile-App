@@ -1,3 +1,6 @@
+/**
+ * @author Zhang Xuhan
+ */
 package com.wellnessapp.service;
 
 import com.wellnessapp.dto.AnalyticsDTOs.*;

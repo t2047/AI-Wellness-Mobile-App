@@ -1,3 +1,7 @@
+/**
+ * @author Jia Qianrui
+ * @author Tao Yuchen
+ */
 package com.wellnessapp.entity;
 
 import jakarta.persistence.*;

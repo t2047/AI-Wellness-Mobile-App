@@ -17,7 +17,7 @@
         android:icon="@android:drawable/ic_menu_send"
         android:title="@string/nav_chat" />
     <item
-        android:id="@+id/action_knowledge"
-        android:icon="@android:drawable/ic_menu_search"
-        android:title="@string/nav_knowledge" />
+        android:id="@+id/action_profile"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="@string/nav_profile" />
 </menu>

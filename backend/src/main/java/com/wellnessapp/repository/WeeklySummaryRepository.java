@@ -1,3 +1,6 @@
+/**
+ * @author Liu Zhuocheng
+ */
 package com.wellnessapp.repository;
 
 import com.wellnessapp.entity.WeeklySummary;
@@ -9,7 +12,7 @@ import java.util.List;
 /**
  * Repository for generated weekly summaries.
  *
- * @author WellnessApp Team
+ * @author Liu Zhuocheng
  */
 @Repository
 public interface WeeklySummaryRepository extends JpaRepository<WeeklySummary, Long> {

@@ -67,3 +67,5 @@ agent/.venv/
 .env
 .env.*
 !.env.example
+
+scripts/

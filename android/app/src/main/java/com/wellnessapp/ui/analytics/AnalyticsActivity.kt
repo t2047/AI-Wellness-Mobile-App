@@ -1,3 +1,7 @@
+/**
+ * @author Zhang Xuhan
+ * @author Liu Zhuocheng
+ */
 package com.wellnessapp.ui.analytics
 
 import android.os.Bundle

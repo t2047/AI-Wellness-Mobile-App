@@ -1,3 +1,7 @@
+/**
+ * @author Tao Yuchen
+ * @author Zhao Lei
+ */
 package com.wellnessapp.config;
 
 import java.nio.file.Files;
