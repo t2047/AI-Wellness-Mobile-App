@@ -6,6 +6,8 @@ Design goals:
 - cache embeddings locally for fast repeated queries
 - use chunk-level retrieval with source metadata for citations
 - fall back safely when required keys are missing
+@author Tao Yuchen
+@author Zhao Lei
 """
 
 from __future__ import annotations

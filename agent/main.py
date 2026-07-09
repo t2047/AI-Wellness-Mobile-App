@@ -16,7 +16,10 @@ Usage:
     python main.py
     (Runs on http://localhost:5001 by default)
 
-Author: ZHAO LEI
+@author Jia Qianrui
+@author Tao Yuchen
+@author Liu Zhuocheng
+@author Zhao Lei
 """
 
 import os

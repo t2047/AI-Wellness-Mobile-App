@@ -1,3 +1,6 @@
+/**
+ * @author Liu Zhuocheng
+ */
 package com.wellnessapp.entity;
 
 import jakarta.persistence.*;

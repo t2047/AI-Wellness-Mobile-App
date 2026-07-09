@@ -1,3 +1,6 @@
+/**
+ * @author Tao Yuchen
+ */
 package com.wellnessapp.service;
 
 import com.wellnessapp.dto.ModelConfigDTOs.*;

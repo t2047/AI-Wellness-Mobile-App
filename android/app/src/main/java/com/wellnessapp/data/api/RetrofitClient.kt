@@ -1,3 +1,7 @@
+/**
+ * @author Jia Qianrui
+ * @author Zhao Lei
+ */
 package com.wellnessapp.data.api
 
 import com.wellnessapp.BuildConfig

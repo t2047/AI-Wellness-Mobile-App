@@ -1,3 +1,7 @@
+/**
+ * @author Jia Qianrui
+ * @author Liu Zhuocheng
+ */
 package com.wellnessapp.ui.recommendation
 
 import android.content.Intent

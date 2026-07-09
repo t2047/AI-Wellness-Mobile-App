@@ -1,3 +1,6 @@
+/**
+ * @author Jia Qianrui
+ */
 package com.wellnessapp.service;
 
 import com.wellnessapp.dto.AuthDTOs.*;

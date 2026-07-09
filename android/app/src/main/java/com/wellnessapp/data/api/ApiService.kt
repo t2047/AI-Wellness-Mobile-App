@@ -1,3 +1,9 @@
+/**
+ * @author Jia Qianrui
+ * @author Tao Yuchen
+ * @author Liu Zhuocheng
+ * @author Zhang Xuhan
+ */
 package com.wellnessapp.data.api
 
 import com.wellnessapp.data.model.*

@@ -1,3 +1,6 @@
+/**
+ * @author Jia Qianrui
+ */
 package com.wellnessapp.controller;
 
 import com.wellnessapp.dto.ApiResponse;

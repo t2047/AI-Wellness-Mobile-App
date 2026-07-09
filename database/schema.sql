@@ -1,3 +1,7 @@
+-- @author: Jia Qianrui
+-- @author: Liu Zhuocheng
+-- @author: Tao Yuchen
+
 -- =====================================================
 -- Wellness App Database Initialization Script
 -- Author: WellnessApp Team

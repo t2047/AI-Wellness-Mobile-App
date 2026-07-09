@@ -1,3 +1,6 @@
+/**
+ * @author Zhang Xuhan
+ */
 package com.wellnessapp.ui.analytics
 
 import android.view.LayoutInflater

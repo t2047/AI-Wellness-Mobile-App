@@ -1,3 +1,7 @@
+"""
+@author Tao Yuchen
+"""
+
 #!/usr/bin/env python3
 """
 MSD Manuals RAG data preparer

@@ -1,3 +1,6 @@
+/**
+ * @author Zhang Xuhan
+ */
 package com.wellnessapp.dto;
 
 import lombok.AllArgsConstructor;

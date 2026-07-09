@@ -1,3 +1,7 @@
+/**
+ * @author Jia Qianrui
+ * @author Zhang Xuhan
+ */
 package com.wellnessapp.repository;
 
 import com.wellnessapp.entity.Recommendation;

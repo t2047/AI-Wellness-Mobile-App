@@ -1,3 +1,6 @@
+/**
+ * @author Jia Qianrui
+ */
 package com.wellnessapp.dto;
 
 import lombok.AllArgsConstructor;

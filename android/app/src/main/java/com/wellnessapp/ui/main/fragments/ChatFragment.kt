@@ -1,3 +1,10 @@
+/**
+ * @author Jia Qianrui
+ * @author Zhao Lei
+ * @author Cai Hanbo
+ * @author Zhang Xuhan
+ * @author Tao Yuchen
+ */
 package com.wellnessapp.ui.main.fragments
 
 import android.app.Activity

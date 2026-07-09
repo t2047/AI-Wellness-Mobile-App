@@ -1,3 +1,6 @@
+/**
+ * @author Zhang Xuhan
+ */
 package com.wellnessapp.controller;
 
 import com.wellnessapp.dto.AnalyticsDTOs.DashboardResponse;

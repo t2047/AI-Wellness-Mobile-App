@@ -1,3 +1,6 @@
+/**
+ * @author Jia Qianrui
+ */
 package com.wellnessapp.repository;
 
 import com.wellnessapp.entity.User;

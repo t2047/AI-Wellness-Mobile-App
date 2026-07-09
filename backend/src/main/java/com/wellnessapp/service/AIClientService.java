@@ -1,3 +1,8 @@
+/**
+ * @author Jia Qianrui
+ * @author Tao Yuchen
+ * @author Liu Zhuocheng
+ */
 package com.wellnessapp.service;
 
 import java.util.ArrayList;
